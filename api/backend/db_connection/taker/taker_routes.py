@@ -46,14 +46,93 @@ def get_up_for_grabs_listings():
 #-----User Story 2------
 # As a Taker, I want to see listings that are labeled as up for grabs 
 # and filter by size, condition, and tags, so I can find items that suit me.
+@taker.route('/listings/filter', methods=['GET'])
+def get_filter_listings():
+    size = request.args.get('size')
+    condition = request.args.get('condition')
+    tags = request.args.get('tags')
 
+    cursor = db.get_db().cursor()
+
+    the_query = '''
+        SELECT
+            i.ItemID, 
+            i.Title, 
+            i.Category, 
+            i.Description, 
+            i.Size, 
+            i.Condition, 
+            u.Name AS OwnerName,
+            GROUP_CONCAT(t.Title SEPARATOR ', ') AS Tags,
+            i.ListedAt
+        FROM Items i
+        JOIN Users u ON i.OwnerID = u.UserID
+        LEFT JOIN ItemTags it ON i.ItemID = it.ItemID
+        LEFT JOIN Tags t ON it.TagID = t.TagID
+        WHERE i.IsAvailable = 1
+    '''
+
+    query_params = []
+    if size:
+        the_query += ' AND i.Size = %s'
+        query_params.append(size)
+
+    if condition:
+        conditions = condition.split(',')
+        placeholders = ', '.join(['%s'] * len(conditions))
+        the_query += f' AND i.Condition IN ({placeholders})'
+        query_params.extend(conditions)
+
+    if tags:
+        tag_list = tags.split(',')
+        placeholders = ', '.join(['%s'] * len(tag_list))
+        the_query += f' AND (t.Title IN ({placeholders}) OR t.Title IS NULL)'
+        query_params.extend(tag_list)
+
+    the_query += '''
+        GROUP BY i.ItemID, i.Title, i.Category, i.Description, i.Size, i.Condition, u.Name, i.ListedAt
+        ORDER BY i.ListedAt DESC;
+    '''
+
+    cursor.execute(the_query, query_params)
+    theData = cursor.fetchall()
+
+    the_response = make_response(jsonify(theData), 200)
+    the_response.mimetype = "application/json"
+    return the_response
 
 #-----User Story 2------
-
 
 #-----User Story 3------
 # As a Taker, I want to be able to cancel take requests that I changed my mind on.
 
+@taker.route('/orders/<int:order_id>', methods=['DELETE'])
+def cancel_take_request(order_id):
+    user_id = request.args.get('user_id')
+
+    cursor = db.get_db().cursor()
+
+    delete_query = '''
+        DELETE FROM OrderItems
+        WHERE OrderID = %s
+        AND OrderID IN (
+            SELECT OrderID FROM Orders
+            WHERE ReceiverID = %s
+            AND ShippingID IS NULL
+        );
+    '''
+
+    cursor.execute(delete_query, (order_id, user_id))
+    rows_affected = cursor.rowcount
+    db.get_db().commit()
+
+    if rows_affected > 0:
+        the_response = make_response(jsonify({"message": "Take request canceled successfully."}), 200)
+    else:
+        the_response = make_response(jsonify({"message": "No matching take request found."}), 404)
+
+    the_response.mimetype = "application/json"
+    return the_response
 
 #-----User Story 3------
 
@@ -65,7 +144,7 @@ def get_up_for_grabs_listings():
 
 @taker.route('/recommendations/<int:taker_id>', methods=['GET'])
 def get_recommendations(taker_id):
-    size = request.args.get('size', default='', type=str)
+    size = request.args.get('size', default='M', type=str)
     cursor = db.get_db().cursor()
 
     the_query = '''
