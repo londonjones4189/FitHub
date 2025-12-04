@@ -4,9 +4,7 @@
 
 
 from flask import Blueprint, request, jsonify, make_response, current_app
-import json
-from backend.db_connection.db import db
-
+from backend.db_connection import db
 dataAnalyst = Blueprint('dataAnalysts', __name__)
 
 
