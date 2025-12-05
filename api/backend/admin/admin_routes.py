@@ -144,12 +144,25 @@ def delete_duplicate_items():
 
 # USER STORY 6 + 1 — Delete specific item
 # DELETE /admin/items/<id>
+# USER STORY 6 + 1 — Delete specific item
+# DELETE /admin/items/<id>
 @admin_bp.route('/items/<int:item_id>', methods=['DELETE'])
 def delete_item(item_id):
-    cursor = db.get_db().cursor()
-    cursor.execute("""
-        DELETE FROM Items WHERE ItemID = %s;
-    """, (item_id,))
-    
-    db.get_db().commit()
-    return jsonify({"message": "Item removed"}), 200
+    try:
+        cursor = db.get_db().cursor()
+
+        # Delete in order of dependencies (child tables first)
+        cursor.execute("DELETE FROM Images WHERE ItemID = %s;", (item_id,))
+        cursor.execute("DELETE FROM ItemTags WHERE ItemID = %s;", (item_id,))
+        cursor.execute("DELETE FROM OrderItems WHERE ItemID = %s;", (item_id,))
+        cursor.execute("DELETE FROM Reports WHERE ReportedItem = %s;", (item_id,))
+        cursor.execute("DELETE FROM Items WHERE ItemID = %s;", (item_id,))
+
+        db.get_db().commit()
+        return jsonify({"message": "Item removed"}), 200
+
+    except Exception as e:
+        db.get_db().rollback()  # Roll back on error
+        return jsonify({"error": str(e)}), 500
+    finally:
+        cursor.close()

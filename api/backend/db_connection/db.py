@@ -9,12 +9,14 @@ class DB:
         self.db = None
 
     def get_db(self):
-        if self.db is None:
+        if self.db is None or not self.db.is_connected():
             self.db = mysql.connector.connect(
                 host=os.getenv('MYSQL_HOST', 'db'),
-                user=os.getenv('MYSQL_USER', 'root'),
-                password=os.getenv('MYSQL_ROOT_PASSWORD'),
-                database=os.getenv('MYSQL_DATABASE')
+                user=os.getenv('MYSQL_USER', 'fithub'),
+                password=os.getenv('MYSQL_PASSWORD', 'fithub'),
+                database=os.getenv('MYSQL_DATABASE', 'fithub'),
+                auth_plugin='mysql_native_password',
+                autocommit=False
             )
         return self.db
 

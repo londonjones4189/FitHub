@@ -8,6 +8,8 @@ from backend.db_connection import db
 from backend.simple.simple_routes import simple_routes
 from backend.ngos.ngo_routes import ngos
 from backend.dataAnalysts.dataAnalyst_routes import dataAnalyst
+from backend.admin.admin_routes import admin_bp
+
 
 
 def create_app():
@@ -18,7 +20,7 @@ def create_app():
 
     # Configure file logging if needed
     #   Uncomment the code in the setup_logging function
-    # setup_logging(app) 
+    # setup_logging(app)
 
     # Load environment variables
     # This function reads all the values from inside
@@ -35,7 +37,7 @@ def create_app():
 
     # # these are for the DB object to be able to connect to MySQL.
     # app.config['MYSQL_DATABASE_USER'] = 'root'
-    app.config["MYSQL_DATABASE_USER"] = os.getenv("DB_USER").strip()
+    app.config["MYSQL_DATABASE_USER"] = os.getenv("MYSQL_USER", "fithub").strip()
     app.config["MYSQL_DATABASE_PASSWORD"] = os.getenv("MYSQL_ROOT_PASSWORD").strip()
     app.config["MYSQL_DATABASE_HOST"] = os.getenv("DB_HOST").strip()
     app.config["MYSQL_DATABASE_PORT"] = int(os.getenv("DB_PORT").strip())
@@ -53,6 +55,7 @@ def create_app():
     app.register_blueprint(simple_routes)
     app.register_blueprint(ngos, url_prefix="/ngo")
     app.register_blueprint(dataAnalyst, url_prefix="/d")
+    app.register_blueprint(admin_bp, url_prefix="/a")
 
 
     # Don't forget to return the app object
@@ -61,7 +64,7 @@ def create_app():
 def setup_logging(app):
     """
     Configure logging for the Flask application in both files and console (Docker Desktop for this project)
-    
+
     Args:
         app: Flask application instance to configure logging for
     """
@@ -77,8 +80,8 @@ def setup_logging(app):
     # file_handler.setFormatter(logging.Formatter(
     #     '%(asctime)s %(levelname)s: %(message)s [in %(pathname)s:%(lineno)d]'
     # ))
-    
-    # Make sure we are capturing all levels of logging into the log files. 
+
+    # Make sure we are capturing all levels of logging into the log files.
     # file_handler.setLevel(logging.DEBUG)  # Capture all levels in file
     # app.logger.addHandler(file_handler)
 
@@ -91,5 +94,4 @@ def setup_logging(app):
     # console_handler.setLevel(logging.DEBUG)
     # app.logger.addHandler(console_handler)
     pass
-    
-    
+
