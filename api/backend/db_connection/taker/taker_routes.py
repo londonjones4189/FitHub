@@ -14,14 +14,8 @@ def get_up_for_grabs_listings():
 
     the_query = '''
         SELECT
-            i.ItemID, 
-            i.Title, 
-            i.Category, 
-            i.Description, 
-            i.Size, 
-            i.Condition, 
-            u.Name AS OwnerName,
-            GROUP_CONCAT(t.Title SEPARATOR ', ') AS Tags,
+            i.ItemID, i.Title, i.Category, i.Description, i.Size, i.Condition, u.Name as OwnerName,
+            GROUP_CONCAT(t.Title SEPARATOR ', ') as Tags,
             i.ListedAt
         FROM Items i
         JOIN Users u ON i.OwnerID = u.UserID
@@ -38,14 +32,13 @@ def get_up_for_grabs_listings():
     the_response = make_response(jsonify(theData), 200)
     the_response.mimetype = "application/json"
     return the_response
-
-
 #-----User Story 1------
 
 
 #-----User Story 2------
-# As a Taker, I want to see listings that are labeled as up for grabs 
-# and filter by size, condition, and tags, so I can find items that suit me.
+# As a Taker, I want to see listing that are labeled as up for grabs 
+# and filter by size, condition, and tags, so I can find items that suit me
+
 @taker.route('/listings/filter', methods=['GET'])
 def get_filter_listings():
     size = request.args.get('size')
@@ -56,14 +49,8 @@ def get_filter_listings():
 
     the_query = '''
         SELECT
-            i.ItemID, 
-            i.Title, 
-            i.Category, 
-            i.Description, 
-            i.Size, 
-            i.Condition, 
-            u.Name AS OwnerName,
-            GROUP_CONCAT(t.Title SEPARATOR ', ') AS Tags,
+            i.itemID, i.title, i.category, i.description, i.size, i.condition, u.name as ownerName,
+            GROUP_CONCAT(t.Title SEPARATOR ', ') as Tags,
             i.ListedAt
         FROM Items i
         JOIN Users u ON i.OwnerID = u.UserID
@@ -73,14 +60,15 @@ def get_filter_listings():
     '''
 
     query_params = []
+
     if size:
-        the_query += ' AND i.Size = %s'
+        the_query += ' AND i.size = %s'
         query_params.append(size)
 
     if condition:
         conditions = condition.split(',')
         placeholders = ', '.join(['%s'] * len(conditions))
-        the_query += f' AND i.Condition IN ({placeholders})'
+        the_query += f' AND i.condition IN ({placeholders})'
         query_params.extend(conditions)
 
     if tags:
@@ -90,7 +78,7 @@ def get_filter_listings():
         query_params.extend(tag_list)
 
     the_query += '''
-        GROUP BY i.ItemID, i.Title, i.Category, i.Description, i.Size, i.Condition, u.Name, i.ListedAt
+        GROUP BY i.itemID, i.title, i.category, i.description, i.size, i.Condition, u.name, i.ListedAt
         ORDER BY i.ListedAt DESC;
     '''
 
@@ -100,8 +88,8 @@ def get_filter_listings():
     the_response = make_response(jsonify(theData), 200)
     the_response.mimetype = "application/json"
     return the_response
-
 #-----User Story 2------
+
 
 #-----User Story 3------
 # As a Taker, I want to be able to cancel take requests that I changed my mind on.
@@ -115,11 +103,12 @@ def cancel_take_request(order_id):
     delete_query = '''
         DELETE FROM OrderItems
         WHERE OrderID = %s
-        AND OrderID IN (
-            SELECT OrderID FROM Orders
-            WHERE ReceiverID = %s
-            AND ShippingID IS NULL
-        );
+          AND OrderID IN (
+              SELECT OrderID
+              FROM Orders
+              WHERE ReceiverID = %s
+                AND ShippingID IS NULL
+          );
     '''
 
     cursor.execute(delete_query, (order_id, user_id))
@@ -133,14 +122,13 @@ def cancel_take_request(order_id):
 
     the_response.mimetype = "application/json"
     return the_response
-
 #-----User Story 3------
 
 
 #-----User Story 4------
-# As a Taker, I want to receive notifications when a new item that matches 
+# As a taker, I want to receive notifications when a new item that matches 
 # my order history styles and sizes is posted as a 'take', 
-# so I can quickly request popular items.
+# so I can quickly request popular items
 
 @taker.route('/recommendations/<int:taker_id>', methods=['GET'])
 def get_recommendations(taker_id):
@@ -149,11 +137,7 @@ def get_recommendations(taker_id):
 
     the_query = '''
         SELECT
-            i.ItemID, 
-            i.Title, 
-            i.Category, 
-            i.Size,
-            u.Name AS OwnerName
+            i.ItemID, i.Title, i.Category, i.Size, u.Name as OwnerName
         FROM Items i
         JOIN Users u ON i.OwnerID = u.UserID
         WHERE i.IsAvailable = 1
@@ -168,12 +152,11 @@ def get_recommendations(taker_id):
     the_response = make_response(jsonify(theData), 200)
     the_response.mimetype = "application/json"
     return the_response
-
 #-----User Story 4------
 
 
 #-----User Story 5------
-# As a Taker, I want to be able to track the status of my incoming package.
+# As a taker, I want to be able to track the status of my incoming package
 
 @taker.route('/track_package/<int:user_id>', methods=['GET'])
 def track_package(user_id):
@@ -181,13 +164,7 @@ def track_package(user_id):
 
     the_query = '''
         SELECT
-            o.OrderID, 
-            i.Title, 
-            o.CreatedAt AS RequestDate, 
-            s.Carrier, 
-            s.TrackingNum, 
-            s.DateShipped, 
-            s.DateArrived
+            o.OrderID, i.Title, o.CreatedAt as RequestDate, s.Carrier, s.TrackingNum, s.DateShipped, s.DateArrived
         FROM Orders o
         JOIN OrderItems oi ON o.OrderID = oi.OrderID
         JOIN Items i ON oi.ItemID = i.ItemID
@@ -200,7 +177,6 @@ def track_package(user_id):
     theData = cursor.fetchall()
 
     the_response = make_response(jsonify(theData), 200)
-
     the_response.mimetype = "application/json"
     return the_response
 #-----User Story 5------
