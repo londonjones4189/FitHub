@@ -38,12 +38,10 @@ def create_app():
     # # these are for the DB object to be able to connect to MySQL.
     # app.config['MYSQL_DATABASE_USER'] = 'root'
     app.config["MYSQL_DATABASE_USER"] = os.getenv("MYSQL_USER", "fithub").strip()
-    app.config["MYSQL_DATABASE_PASSWORD"] = os.getenv("MYSQL_ROOT_PASSWORD").strip()
-    app.config["MYSQL_DATABASE_HOST"] = os.getenv("DB_HOST").strip()
-    app.config["MYSQL_DATABASE_PORT"] = int(os.getenv("DB_PORT").strip())
-    app.config["MYSQL_DATABASE_DB"] = os.getenv(
-        "DB_NAME"
-    ).strip()  # Change this to your DB name
+    app.config["MYSQL_DATABASE_PASSWORD"] = os.getenv("MYSQL_PASSWORD", "fithub").strip()
+    app.config["MYSQL_DATABASE_HOST"] = os.getenv("MYSQL_HOST", "db").strip()
+    app.config["MYSQL_DATABASE_PORT"] = int(os.getenv("MYSQL_PORT", "3306").strip())
+    app.config["MYSQL_DATABASE_DB"] = os.getenv("MYSQL_DATABASE", "fithub").strip()
 
     # Initialize the database object with the settings above.
     app.logger.info("current_app(): starting the database connection")

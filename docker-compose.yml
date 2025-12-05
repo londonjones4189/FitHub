@@ -24,6 +24,8 @@ services:
       dockerfile: Dockerfile
     container_name: fithub-backend
     restart: always
+    volumes:
+      - ./api:/app/api
     environment:
       MYSQL_HOST: db
       MYSQL_PORT: 3306
@@ -31,14 +33,8 @@ services:
       MYSQL_PASSWORD: fithub
       MYSQL_DATABASE: fithub
       SECRET_KEY: devsecret
-      # Add these for compatibility:
-      DB_USER: fithub
-      DB_HOST: db
-      DB_PORT: 3306
-      DB_NAME: fithub
-      DB_PASSWORD: fithub
     ports:
-      - "5001:4000"
+      - "4000:4000"  # Changed from 5001:4000
     depends_on:
       - db
 
