@@ -1,0 +1,57 @@
+version: "3.9"
+
+services:
+  db:
+    image: mysql:8.0
+    container_name: fithub-db
+    hostname: db
+    restart: always
+    command: --default-authentication-plugin=mysql_native_password
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: fithub
+      MYSQL_USER: fithub
+      MYSQL_PASSWORD: fithub
+    ports:
+      - "3310:3306"
+    volumes:
+      - ./database-files:/docker-entrypoint-initdb.d/:ro
+      - mysql_data:/var/lib/mysql
+
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: fithub-backend
+    restart: always
+    environment:
+      MYSQL_HOST: db
+      MYSQL_PORT: 3306
+      MYSQL_USER: fithub
+      MYSQL_PASSWORD: fithub
+      MYSQL_DATABASE: fithub
+      SECRET_KEY: devsecret
+      # Add these for compatibility:
+      DB_USER: fithub
+      DB_HOST: db
+      DB_PORT: 3306
+      DB_NAME: fithub
+      DB_PASSWORD: fithub
+    ports:
+      - "5001:4000"
+    depends_on:
+      - db
+
+  app:
+    image: node:18
+    working_dir: /app
+    volumes:
+      - ./app:/app
+    ports:
+      - "8600:8501"
+    command: ["npm", "start"]
+    environment:
+      - WATCHPACK_POLLING=true
+
+volumes:
+  mysql_data:
