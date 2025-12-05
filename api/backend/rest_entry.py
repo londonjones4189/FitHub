@@ -10,6 +10,8 @@ from backend.ngos.ngo_routes import ngos
 from backend.dataAnalysts.dataAnalyst_routes import dataAnalyst
 from backend.admin.admin_routes import admin_bp
 
+from backend.taker.taker_routes import taker
+app.register_blueprint(taker, url_prefix="/t")
 
 
 def create_app():
