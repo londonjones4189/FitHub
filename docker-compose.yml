@@ -34,7 +34,7 @@ services:
       MYSQL_DATABASE: fithub
       SECRET_KEY: devsecret
     ports:
-      - "4000:4000"  # Changed from 5001:4000
+      - "4000:4000"
     depends_on:
       - db
 
