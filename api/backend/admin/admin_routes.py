@@ -71,22 +71,6 @@ def deactivate_user(user_id):
     the_response.status_code = 200
     return the_response
 
-# USER STORY 3.5 — Activate user
-@admin.route('/users/<int:user_id>/activate', methods=['PUT'])
-def activate_user(user_id):
-    cursor = db.get_db().cursor()
-    cursor.execute("""
-        UPDATE Users
-        SET IsActive = 1
-        WHERE UserID = %s;
-    """, (user_id,))
-
-    db.get_db().commit()
-
-    the_response = make_response(jsonify({"message": "User activated"}))
-    the_response.status_code = 200
-    return the_response
-
 # USER STORY 4 — Create announcement
 @admin.route('/announcements', methods=['POST'])
 def create_announcement():
