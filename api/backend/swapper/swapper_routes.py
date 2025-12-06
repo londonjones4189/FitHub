@@ -4,7 +4,7 @@
 
 
 from flask import Blueprint, request, jsonify, make_response, current_app
-from backend.db_connection import db
+from backend.db_connection.db import db
 swapper = Blueprint('swappers', __name__)
 
 
@@ -13,15 +13,10 @@ swapper = Blueprint('swappers', __name__)
 
 
 @swapper.route('/listings/<SizeFilter>/<ConditionFilter>/<TagFilter>/', methods=['GET'])
-def get_all_listings():
+def get_all_listings(SizeFilter, ConditionFilter, TagFilter):
     cursor = db.get_db().cursor()
 
     the_query = '''
-        SET @SizeFilter = 'M';
-        SET @ConditionFilter = 'Good';
-        SET @TagFilter = 'Vintage';
-
-
         SELECT DISTINCT i.ItemID, i.Title, i.Category, i.Description, i.Size, i.`Condition`, i.`Type`, u.Name AS OwnerName
         FROM Items i
         INNER JOIN Users u ON i.OwnerID = u.UserID
@@ -29,12 +24,11 @@ def get_all_listings():
         LEFT JOIN Tags t ON it.TagID = t.TagID
         WHERE i.IsAvailable = 1
             AND i.`Type` = 'Swap'
-            AND i.Size = @SizeFilter
-            AND i.`Condition` = @ConditionFilter
-            AND t.Title = @TagFilter;
-
+            AND i.Size = %s
+            AND i.`Condition` = %s
+            AND t.Title = %s;
     '''
-    cursor.execute(the_query)
+    cursor.execute(the_query, (SizeFilter, ConditionFilter, TagFilter))
     theData = cursor.fetchall()
 
     the_response = make_response(jsonify(theData))
@@ -46,38 +40,42 @@ def get_all_listings():
 #-----User Story 2------
 #As a Swapper, I want to be able to cancel a swap and have my swapped clothing become available again.
 
-@swapper.route('/cancel_swap/<int:ItemID>/', methods=['DELETE'])
+@swapper.route('/cancel_swap/<int:OrderID>/<int:UserID>/', methods=['DELETE'])
 def cancel_swap(OrderID, UserID):
-    cursor = db.get_db().cursor()
+    try:
+        cursor = db.get_db().cursor()
 
-    the_query = '''
-        SET @OrderIDToCancel = 1;
-        SET @MyUserID = 1;
+        # Update items to be available again
+        cursor.execute('''
+            UPDATE Items i
+            INNER JOIN OrderItems oi ON i.ItemID = oi.ItemID
+            SET i.IsAvailable = 1
+            WHERE oi.OrderID = %s
+            AND i.OwnerID = %s;
+        ''', (OrderID, UserID))
+        
+        # Delete related records
+        cursor.execute("DELETE FROM Feedback WHERE OrderID = %s;", (OrderID,))
+        cursor.execute("DELETE FROM OrderItems WHERE OrderID = %s;", (OrderID,))
+        cursor.execute("DELETE FROM Orders WHERE OrderID = %s AND (GivenByID = %s OR ReceiverID = %s);", (OrderID, UserID, UserID))
+        
+        db.get_db().commit()
 
+        the_response = make_response(jsonify({"message": "Swap cancelled and item is now available for swap."}))
+        the_response.status_code = 200
+        the_response.mimetype = 'application/json'
+        return the_response
 
-        UPDATE Items i
-        INNER JOIN OrderItems oi ON i.ItemID = oi.ItemID
-        SET i.IsAvailable = 1
-        WHERE oi.OrderID = @OrderIDToCancel
-        AND i.OwnerID = @MyUserID;
-
-        DELETE FROM Feedback WHERE OrderID = @OrderIDToCancel;
-        DELETE FROM OrderItems WHERE OrderID = @OrderIDToCancel;
-        DELETE FROM Orders WHERE OrderID = @OrderIDToCancel AND (GivenByID = @MyUserID OR ReceiverID = @MyUserID);
-
-    '''
-    cursor.execute(the_query, (OrderID, UserID))
-    db.get_db().commit()
-
-    the_response = make_response(jsonify({"message": "Swap cancelled and item is now available for swap."}))
-    the_response.status_code = 200
-    the_response.mimetype = 'application/json'
-    return the_response
+    except Exception as e:
+        db.get_db().rollback()
+        the_response = make_response(jsonify({"error": str(e)}))
+        the_response.status_code = 500
+        return the_response
 
 #-----User Story 3------
 # As a Swapper, I want to be able to track the status of my sending and receiving packages of my swap.
-@swapper.route('/track_swap/<int:OrderID>/', methods=['GET'])
-def track_swap(OrderID):
+@swapper.route('/track_swap/<int:UserID>/', methods=['GET'])
+def track_swap(UserID):
     cursor = db.get_db().cursor()
 
     the_query = '''
@@ -114,25 +112,35 @@ def track_swap(OrderID):
 # As a Swapper, I want to be able to upload clothing items as listings and list them as for a swap or a take.
 @swapper.route('/upload_listing/', methods=['POST'])
 def upload_listing():
-    cursor = db.get_db().cursor()
-    data = request.get_json()
+    try:
+        cursor = db.get_db().cursor()
+        data = request.get_json()
 
-    title = the_data['Title']
-    category = the_data['Category']
-    description = the_data['Description']
-    size = the_data['Size']
-    item_type = the_data['Type']
-    condition = the_data['Condition']
-    owner_id = the_data['OwnerID']
+        title = data['Title']
+        category = data['Category']
+        description = data['Description']
+        size = data['Size']
+        item_type = data['Type']
+        condition = data['Condition']
+        owner_id = data['OwnerID']
 
-    the_query = '''
-        INSERT INTO Items (Title, Category, Description, Size, Type, Condition, OwnerID, IsAvailable)
-        VALUES (%s, %s, %s, %s, %s, %s, %s, 1);
-    '''
+        the_query = '''
+            INSERT INTO Items (Title, Category, Description, Size, Type, Condition, OwnerID, IsAvailable)
+            VALUES (%s, %s, %s, %s, %s, %s, %s, 1);
+        '''
 
-    cursor.execute(the_query, (title, category, description, size, item_type, condition, owner_id))
-    db.get_db().commit()    
-    the_response = make_response(jsonify({"message": "Listing uploaded successfully."}))
+        cursor.execute(the_query, (title, category, description, size, item_type, condition, owner_id))
+        db.get_db().commit()    
+        the_response = make_response(jsonify({"message": "Listing uploaded successfully."}))
+        the_response.status_code = 200
+        the_response.mimetype = 'application/json'
+        return the_response
+
+    except Exception as e:
+        db.get_db().rollback()
+        the_response = make_response(jsonify({"error": str(e)}))
+        the_response.status_code = 500
+        return the_response
 
 
 

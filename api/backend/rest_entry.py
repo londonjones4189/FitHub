@@ -9,7 +9,7 @@ from backend.simple.simple_routes import simple_routes
 from backend.ngos.ngo_routes import ngos
 from backend.dataAnalysts.dataAnalyst_routes import dataAnalyst
 from backend.admin.admin_routes import admin
-from backend.swappers.swapper_routes import swapper
+from backend.swapper.swapper_routes import swapper
 
 logging.basicConfig(level=logging.DEBUG)
 
