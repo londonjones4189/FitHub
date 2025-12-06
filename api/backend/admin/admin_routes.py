@@ -1,5 +1,5 @@
 from flask import Blueprint, request, jsonify, make_response
-from backend.db_connection.db import db
+from backend.db_connection import db
 
 admin = Blueprint('admin', __name__)
 
@@ -70,7 +70,6 @@ def deactivate_user(user_id):
     the_response = make_response(jsonify({"message": "User deactivated"}))
     the_response.status_code = 200
     return the_response
-
 
 # USER STORY 4 — Create announcement
 @admin.route('/announcements', methods=['POST'])
