@@ -9,7 +9,7 @@ st.set_page_config(layout = 'wide')
 SideBarLinks()
 
 # Add logo to sidebar
-add_logo("public/FitHublogo.png")
+add_logo("assets/FitHublogo.png")
 
 # Log admin dashboard access
 logger.info(f"Admin Dashboard loaded by {st.session_state.get('first_name', 'Unknown')}")

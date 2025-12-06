@@ -1,31 +1,38 @@
+name: fithub
+
 services:
   app:
     build: ./app
-    container_name: fithub-app
-    volumes:
-      - ./app/src:/appcode/src
+    container_name: web-app
+    hostname: web-app
+    volumes: ["./app/src:/app"]
+    environment:
+      - WATCHPACK_POLLING=true
     ports:
-      - "8501:8501"
+      - 8501:8501
 
   api:
     build: ./api
-    container_name: fithub-api
+    container_name: web-api
+    hostname: web-api
+    # mapping on folder - insert into docker like harddrive
+    volumes: ["./api:/apicode"]
+    environment:
+      - WATCHPACK_POLLING=true
     ports:
-      - "4000:4000"
-    volumes:
-      - ./api:/apicode
+      - 4000:4000
 
   db:
-    image: mysql:8.0
-    container_name: fithub-db
-    environment:
-      MYSQL_ROOT_PASSWORD: 1234
-      MYSQL_DATABASE: fithub
+    env_file:
+      - ./api/.env
+    image: mysql:9
+    container_name: mysql_db
+    hostname: db
     volumes:
-      - ./database-files:/docker-entrypoint-initdb.d/:ro
-      - mysql_data:/var/lib/mysql
+      - "./database-files:/docker-entrypoint-initdb.d/:ro"
+      - "mysql_data:/var/lib/mysql"
     ports:
-      - "3200:3306"
+      - 3200:3306
 
 volumes:
   mysql_data:
