@@ -8,7 +8,9 @@ from backend.db_connection import db
 from backend.simple.simple_routes import simple_routes
 from backend.ngos.ngo_routes import ngos
 from backend.dataAnalysts.dataAnalyst_routes import dataAnalyst
-from backend.admin.admin_routes import admin_bp
+from backend.admin.admin_routes import admin
+
+logging.basicConfig(level=logging.DEBUG)
 
 
 
@@ -37,11 +39,11 @@ def create_app():
 
     # # these are for the DB object to be able to connect to MySQL.
     # app.config['MYSQL_DATABASE_USER'] = 'root'
-    app.config["MYSQL_DATABASE_USER"] = os.getenv("MYSQL_USER", "fithub").strip()
-    app.config["MYSQL_DATABASE_PASSWORD"] = os.getenv("MYSQL_PASSWORD", "fithub").strip()
-    app.config["MYSQL_DATABASE_HOST"] = os.getenv("MYSQL_HOST", "db").strip()
-    app.config["MYSQL_DATABASE_PORT"] = int(os.getenv("MYSQL_PORT", "3306").strip())
-    app.config["MYSQL_DATABASE_DB"] = os.getenv("MYSQL_DATABASE", "fithub").strip()
+    app.config["MYSQL_DATABASE_USER"] = os.getenv("DB_USER", "root").strip()
+    app.config["MYSQL_DATABASE_PASSWORD"] = os.getenv("MYSQL_ROOT_PASSWORD", "password").strip()
+    app.config["MYSQL_DATABASE_HOST"] = os.getenv("DB_HOST", "db").strip()
+    app.config["MYSQL_DATABASE_PORT"] = int(os.getenv("DB_PORT", "3306").strip())
+    app.config["MYSQL_DATABASE_DB"] = os.getenv("DB_NAME", "fithub").strip()
 
     # Initialize the database object with the settings above.
     app.logger.info("current_app(): starting the database connection")
@@ -53,7 +55,7 @@ def create_app():
     app.register_blueprint(simple_routes)
     app.register_blueprint(ngos, url_prefix="/ngo")
     app.register_blueprint(dataAnalyst, url_prefix="/d")
-    app.register_blueprint(admin_bp, url_prefix="/a")
+    app.register_blueprint(admin, url_prefix="/a")
 
 
     # Don't forget to return the app object
