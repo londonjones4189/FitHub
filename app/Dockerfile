@@ -1,14 +1,20 @@
 FROM python:3.11-slim
 
-WORKDIR /app
+WORKDIR /appcode
 
-COPY api/requirements.txt ./requirements.txt
-RUN pip install --no-cache-dir -r requirements.txt
+RUN apt-get update && apt-get install -y \
+  build-essential \
+  curl \
+  git \
+  libfreetype6-dev \
+  pkg-config \
+  && rm -rf /var/lib/apt/lists/*
 
+COPY ./src/requirements.txt .
+RUN pip3 install -r requirements.txt
 
-COPY api/ ./api/
-ENV PYTHONPATH="/app/api"
+COPY ./src ./src
 
-EXPOSE 4000
+EXPOSE 8501
 
-CMD ["python", "-u", "api/backend_app.py"]
+CMD ["streamlit", "run", "src/Home.py", "--server.port=8501", "--server.address=0.0.0.0"]

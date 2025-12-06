@@ -1,4 +1,12 @@
-FROM ubuntu:latest
-LABEL authors="micahcheng"
+FROM python:3.11-slim
 
-ENTRYPOINT ["top", "-b"]
+WORKDIR /apicode
+
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+
+COPY . .
+
+EXPOSE 4000
+
+CMD ["python", "-u", "backend_app.py"]

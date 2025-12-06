@@ -1,53 +1,31 @@
-version: "3.9"
-
 services:
+  app:
+    build: ./app
+    container_name: fithub-app
+    volumes:
+      - ./app/src:/appcode/src
+    ports:
+      - "8501:8501"
+
+  api:
+    build: ./api
+    container_name: fithub-api
+    ports:
+      - "4000:4000"
+    volumes:
+      - ./api:/apicode
+
   db:
     image: mysql:8.0
     container_name: fithub-db
-    hostname: db
-    restart: always
-    command: --default-authentication-plugin=mysql_native_password
     environment:
-      MYSQL_ROOT_PASSWORD: root
+      MYSQL_ROOT_PASSWORD: 1234
       MYSQL_DATABASE: fithub
-      MYSQL_USER: fithub
-      MYSQL_PASSWORD: fithub
-    ports:
-      - "3310:3306"
     volumes:
       - ./database-files:/docker-entrypoint-initdb.d/:ro
       - mysql_data:/var/lib/mysql
-
-  backend:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    container_name: fithub-backend
-    restart: always
-    volumes:
-      - ./api:/app/api
-    environment:
-      MYSQL_HOST: db
-      MYSQL_PORT: 3306
-      MYSQL_USER: fithub
-      MYSQL_PASSWORD: fithub
-      MYSQL_DATABASE: fithub
-      SECRET_KEY: devsecret
     ports:
-      - "4000:4000"
-    depends_on:
-      - db
-
-  app:
-    image: node:18
-    working_dir: /app
-    volumes:
-      - ./app:/app
-    ports:
-      - "8600:8501"
-    command: ["npm", "start"]
-    environment:
-      - WATCHPACK_POLLING=true
+      - "3200:3306"
 
 volumes:
   mysql_data:
