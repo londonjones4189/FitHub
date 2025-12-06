@@ -70,7 +70,6 @@ def deactivate_user(user_id):
     the_response = make_response(jsonify({"message": "User deactivated"}))
     the_response.status_code = 200
     return the_response
-
 # USER STORY 3.5 — Activate user
 @admin.route('/users/<int:user_id>/activate', methods=['PUT'])
 def activate_user(user_id):
