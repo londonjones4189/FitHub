@@ -40,7 +40,7 @@ def SideBarLinks(show_home=False):
     """
 
     # Always show the logo
-    st.sidebar.image("assets/fitlogo.png", width=150)
+    st.sidebar.image("assets/fitlogo.png", width=204)
 
     # If no user authentication flag exists, redirect to home
     if "authenticated" not in st.session_state:

@@ -12,9 +12,9 @@ st.title("Item Cleanup Tools")
 
 API_BASE = "http://api:4000/a"
 
-# ===============================
+
 # USER STORY 6 — DELETE DUPLICATES
-# ===============================
+
 st.write("## Remove Duplicate Items")
 
 if st.button("Delete Duplicate Items"):
@@ -24,9 +24,9 @@ if st.button("Delete Duplicate Items"):
     except:
         st.error("Error deleting duplicate items.")
 
-# ===============================
+
 # USER STORY 6+1 — DELETE SPECIFIC ITEM
-# ===============================
+
 st.write("## Delete Specific Item")
 
 item_id = st.number_input("Enter Item ID to Delete", min_value=1, step=1)
