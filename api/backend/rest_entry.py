@@ -7,8 +7,11 @@ from logging.handlers import RotatingFileHandler
 from backend.db_connection import db
 from backend.simple.simple_routes import simple_routes
 from backend.ngos.ngo_routes import ngos
+
 from backend.dataAnalysts.dataAnalyst_routes import dataAnalyst
 from backend.admin.admin_routes import admin
+
+from backend.taker.taker_routes import taker
 
 logging.basicConfig(level=logging.DEBUG)
 
@@ -56,6 +59,7 @@ def create_app():
     app.register_blueprint(ngos, url_prefix="/ngo")
     app.register_blueprint(dataAnalyst, url_prefix="/d")
     app.register_blueprint(admin, url_prefix="/a")
+    app.register_blueprint(taker, url_prefix="/t")
 
 
     # Don't forget to return the app object
