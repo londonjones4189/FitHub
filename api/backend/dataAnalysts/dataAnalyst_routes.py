@@ -126,7 +126,7 @@ def get_orders_per_users():
 
 #-----User Story 5------
 #As a Senior Data Analyst, I want to see shipments with above-average
-# delivery times (excluding those still in transit), so I can flag carriers with delays.
+# delivery times (excluding those still in transit), so I can flag carriers who have a pattern of delays.
 
 @dataAnalyst.route('/shipments/delay', methods=['GET'])
 def get_shipments_delay():
