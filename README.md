@@ -2,11 +2,17 @@
 # A CS 3200 Group Project Fall 2025 
 
 Group Members:
+
 Micah Cheng
+
 Will Cramer
+
 London Jones 
+
 Yurika Kan
+
 Samuel Yao
+
 
 FitHub is a digital clothing exchange platform designed to help people refresh their wardrobes sustainably. Instead of buying new clothes or engaging in bidding wars on platforms like Depop or Ebay, FitHub allows users to swap, take, or donate items based on personalized style and profiles. FitHub’s Flask REST API and Streamlit UI work together to support finding your dream wardrobe through analytical recommendations.
 
