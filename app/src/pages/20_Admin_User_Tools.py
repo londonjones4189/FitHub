@@ -1,83 +1,95 @@
 import logging
 logger = logging.getLogger(__name__)
-import streamlit as st
-import requests
-from streamlit_extras.app_logo import add_logo
-from modules.nav import SideBarLinks
 
+import streamlit as st
+from modules.nav import SideBarLinks
+import requests
+
+st.set_page_config(layout="wide")
 SideBarLinks()
 
 API_BASE = "http://api:4000/a"
 
-st.title("User Management")
+st.markdown("""
+<style>
 
-col_left, col_right = st.columns([1, 1])
+.block-container {
+    padding-top: 2rem;
+    max-width: 95%;
+}
 
-with col_left:
+.page-title {
+    color: #328E6E;
+    font-size: 42px;
+    font-weight: bold;
+    text-align: center;
+    margin-bottom: 10px;
+}
 
-    st.subheader("Update User Role")
+.section-title {
+    color: #328E6E;
+    font-size: 26px;
+    font-weight: 600;
+    margin-bottom: 10px;
+}
 
-    user_id_role = st.text_input("“Enter ID”", key="role_user_id")
+div.stButton > button {
+    background-color: #328E6E;
+    color: #E1EEBC;
+    height: 3.5em;
+    width: 100%;
+    font-size: 20px;
+    font-weight: bold;
+    border-radius: 10px;
+    border: none;
+}
 
-    st.write("")  # spacing
+div.stButton > button:hover {
+    background-color: #2a7359;
+}
 
-    # Role buttons (Figma style)
-    role_selected = st.radio(
+</style>
+""", unsafe_allow_html=True)
+
+st.markdown('<div class="page-title">Admin: User Management</div>', unsafe_allow_html=True)
+
+col1, col2 = st.columns(2)
+
+# UPDATE USER ROLE
+with col1:
+    st.markdown('<div class="section-title">Update User Role</div>', unsafe_allow_html=True)
+
+    user_id = st.number_input("User ID:", step=1, min_value=1)
+
+    new_role = st.selectbox(
         "Select Role",
-        ["Admin", "User", "Analyst"],
-        label_visibility="collapsed"
+        ["admin", "user", "worker"]
     )
 
-    # Convert Figma labels → backend values
-    role_map = {
-        "Admin": "admin",
-        "User": "user",
-        "Analyst": "worker"  # your DB role
-    }
-
-    chosen_role = role_map[role_selected]
-
-    st.write("")  # spacing
-
-    if st.button("Update Roles", use_container_width=True):
-        if not user_id_role:
-            st.error("Please enter a User ID.")
-        else:
-            try:
-                payload = {"role": chosen_role}
-                response = requests.put(
-                    f"{API_BASE}/users/{user_id_role}/role",
-                    json=payload
-                )
-                if response.status_code == 200:
-                    st.success("User role updated successfully!")
-                else:
-                    st.error(f"Failed to update role: {response.text}")
-
-            except requests.exceptions.RequestException as e:
-                st.error(f"Error connecting to API: {e}")
+    if st.button("Update Role", use_container_width=True):
+        logger.info(f"Updating role for user {user_id} → {new_role}")
+        try:
+            response = requests.put(
+                f"{API_BASE}/users/{int(user_id)}/role",
+                json={"role": new_role}
+            )
+            st.write(response.json())
+        except:
+            st.error("Could not update role.")
 
 
-with col_right:
+# DEACTIVATE USER
+with col2:
+    st.markdown('<div class="section-title">Deactivate User</div>', unsafe_allow_html=True)
 
-    st.subheader("")
-
-    user_id_deactivate = st.text_input("“Enter ID”", key="deactivate_user_id")
-
-    st.write("")
+    deactivate_user_id = st.number_input("User ID to Deactivate:", step=1, min_value=1)
 
     if st.button("Deactivate User", use_container_width=True):
-        if not user_id_deactivate:
-            st.error("Please enter a User ID.")
-        else:
-            try:
-                response = requests.put(
-                    f"{API_BASE}/users/{user_id_deactivate}/deactivate"
-                )
-                if response.status_code == 200:
-                    st.success("User deactivated successfully!")
-                else:
-                    st.error(f"Failed to deactivate user: {response.text}")
-
-            except requests.exceptions.RequestException as e:
-                st.error(f"Error connecting to API: {e}")
+        logger.info(f"Deactivating user {deactivate_user_id}")
+        try:
+            response = requests.put(
+                f"{API_BASE}/users/{int(deactivate_user_id)}/deactivate"
+            )
+            st.write(response.json())
+        except:
+            st.error("Could not deactivate user.")
