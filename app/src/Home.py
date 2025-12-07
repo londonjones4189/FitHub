@@ -82,7 +82,7 @@ with col2:
         st.session_state['role'] = 'Admin: Aisha'
         st.session_state['first_name'] = 'Aisha'
         logger.info("Logging in as Admin Persona")
-        st.switch_page('pages/05_Admin_Home.py')
+        st.switch_page('pages/00_AdminDash.py')
 
 st.markdown('<br>', unsafe_allow_html=True)
 

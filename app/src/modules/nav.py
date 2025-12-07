@@ -132,7 +132,7 @@ def AdminUserToolsNav():
 def ItemCleanupNav():
     st.sidebar.page_link("pages/30_Item_Cleanup.py", label="Item Cleanup" )
 def AdminHomeNav():
-    st.sidebar.page_link("pages/05_Admin_Home.py", label= "Admin Home")
+    st.sidebar.page_link("pages/00_AdminDash.py", label= "Admin Home")
 
 def DataAnalystNav():
     st.sidebar.page_link("pages/00_DADash.py", label = "Data Analyst Home")
