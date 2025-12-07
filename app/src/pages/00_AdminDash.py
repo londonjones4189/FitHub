@@ -73,25 +73,29 @@ div.stButton > button:hover {
 # Admin Dashboard UI
 
 
-st.markdown('<div class="admin-title">🧑🏻‍💼Admin Dashboard</div>', unsafe_allow_html=True)
-
-st.markdown('<div class="section-subtitle">Manage the platform and user operations</div>', unsafe_allow_html=True)
+st.markdown(f'<div class="taker-title">👋 Welcome, {st.session_state.get("first_name", "Taker")}!</div>', unsafe_allow_html=True)
+st.markdown('<div class="section-subtitle">What would you like to do today?</div>', unsafe_allow_html=True)
 st.write("")
 
 
-col1, col2, col3 = st.columns([1, 1, 1])
+col1, col2 = st.columns([1, 1])
 
 with col1:
     if st.button("Manage Reports"):
         st.switch_page("pages/10_Reports_Management.py")
 
-with col2:
+with col1:
     if st.button("User Roles"):
         logger.info("Navigating to User Roles page")
-        st.switch_page("pages/20_Admin_User_Tools.py")
+        st.switch_page("pages/10_Admin_User_Tools.py")
 
-with col3:
+with col2:
     if st.button("Item Cleanup Tools"):
         logger.info("Navigating to Item Cleanup Tools")
-        st.switch_page("pages/30_Item_Cleanup.py")
+        st.switch_page("pages/10_Item_Cleanup.py")
+
+with col2:
+    if st.button("Announcements"):
+        logger.info("Navigating to Announcements")
+        st.switch_page("pages/10_Announcements.py")
 

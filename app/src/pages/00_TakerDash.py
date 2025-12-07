@@ -88,9 +88,8 @@ div[data-testid="column"]:nth-of-type(3) button:hover {
 
 # Taker Dashboard UI
 st.markdown(f'<div class="taker-title">👋 Welcome, {st.session_state.get("first_name", "Taker")}!</div>', unsafe_allow_html=True)
-
 st.markdown('<div class="section-subtitle">What would you like to do today?</div>', unsafe_allow_html=True)
-st.write("")  # spacing
+st.write("")
 
 # Main buttons - Browse and View Orders (half and half)
 col1, col2 = st.columns([1, 1])
