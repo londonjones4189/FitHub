@@ -133,8 +133,12 @@ def ItemCleanupNav():
     st.sidebar.page_link("pages/30_Item_Cleanup.py", label="Item Cleanup" )
 def AdminHomeNav():
     st.sidebar.page_link("pages/05_Admin_Home.py", label= "Admin Home")
+
+def DataAnalystNav():
+    st.sidebar.page_link("pages/00_DADash.py", label = "Data Analyst Home")
 # --------------------------------Links Function -----------------------------------------------
 def SideBarLinks(show_home=False):
+
     """
     This function handles adding links to the sidebar of the app based upon the logged-in user's role, which was put in the streamlit session_state object when logging in.
     """
@@ -161,13 +165,16 @@ def SideBarLinks(show_home=False):
             AdminUserToolsNav()
             ItemCleanupNav()
             ReportsManagementNav()
+        #If the user is an data analyst, give them access to the data analyst pages
+        if st.session_state["role"] == "data_analyst":
+            DataAnalystNav()
 
     # Always show the About page at the bottom of the list of links
     AboutPageNav()
 
     if st.session_state["authenticated"]:
         # Always show a logout button if there is a logged in user
-        if st.sidebar.button("Logout"):
+        if st.sidebar.button("Logout", key="logout_button"):
             del st.session_state["role"]
             del st.session_state["authenticated"]
             st.switch_page("Home.py")
