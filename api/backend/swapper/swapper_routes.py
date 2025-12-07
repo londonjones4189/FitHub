@@ -5,7 +5,7 @@
 
 from flask import Blueprint, request, jsonify, make_response, current_app
 from backend.db_connection.db import db
-swapper = Blueprint('swappers', __name__)
+swapper = Blueprint('swapper', __name__)
 
 
 #-----User Story 1------
