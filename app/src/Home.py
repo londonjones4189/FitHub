@@ -13,12 +13,9 @@ st.session_state['authenticated'] = False
 # Sidebar
 SideBarLinks(show_home=True)
 
-# ***************************************************
 # CSS Styling
-# ***************************************************
 st.markdown("""
     <style>
-    /* Center everything */
     .block-container {
         display: flex;
         justify-content: center;
@@ -27,8 +24,6 @@ st.markdown("""
         padding-right: 1rem;
         max-width: 100%;
     }
-    
-    /* Swap text styling */
     .swap-text {
         color: #328E6E;
         font-size: 48px;
@@ -38,8 +33,6 @@ st.markdown("""
         margin-top: 20px;
         white-space: nowrap;
     }
-    
-    /* Buttons styling */
     div.stButton > button {
         background-color: #328E6E;
         color: #E1EEBC;
@@ -49,27 +42,20 @@ st.markdown("""
         font-weight: bold;
         border-radius: 10px;
     }
-    
     div.stButton > button:hover {
         background-color: #2a7359;
         border-color: #328E6E;
     }
-    
-    /* Make all columns flex properly */
     [data-testid="column"] {
         display: flex;
         justify-content: center;
         align-items: center;
     }
-    
-    /* Emoji fixed width */
     .emoji-container {
         width: 80px;
         text-align: right;
         padding-right: 15px;
     }
-    
-    /* Logo container */
     .logo-container {
         text-align: center;
         margin-bottom: 20px;
@@ -77,9 +63,7 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
-# ***************************************************
 # Main content
-# ***************************************************
 
 # Logo centered at top
 st.markdown('<div class="logo-container">', unsafe_allow_html=True)
