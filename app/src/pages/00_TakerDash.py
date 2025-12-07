@@ -11,7 +11,7 @@ st.set_page_config(layout="wide")
 
 SideBarLinks()
 
-API_BASE = "http://api:4000/d"
+API_BASE = "http://api:4000/t"
 
 st.title(f"Welcome Taker, {st.session_state['first_name']}!")
 st.write('')
