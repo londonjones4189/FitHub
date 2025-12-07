@@ -4,7 +4,7 @@
 
 
 from flask import Blueprint, request, jsonify, make_response, current_app
-from backend.db_connection.db import db
+from backend.db_connection import db
 swapper = Blueprint('swapper', __name__)
 
 
@@ -14,6 +14,7 @@ swapper = Blueprint('swapper', __name__)
 @swapper.route('/listings/up_for_swap', methods=['GET'])
 def get_up_for_swap_listings():
     cursor = db.get_db().cursor()
+    user_id = request.args.get('user_id', type=int)
 
     the_query = '''
         SELECT
@@ -21,11 +22,19 @@ def get_up_for_swap_listings():
             i.ListedAt
         FROM Items i
         JOIN Users u ON i.OwnerID = u.UserID
-        WHERE i.IsAvailable = 1 AND i.Type = 'Swap'
-        ORDER BY i.ListedAt DESC;
+        WHERE i.IsAvailable = 1 AND i.Type = 'swap'
     '''
-
-    cursor.execute(the_query)
+    
+    query_params = []
+    
+    # Exclude items owned by the current user
+    if user_id:
+        the_query += ' AND i.OwnerID != %s'
+        query_params.append(user_id)
+    
+    the_query += ' ORDER BY i.ListedAt DESC;'
+    
+    cursor.execute(the_query, tuple(query_params))
     items = cursor.fetchall()
 
     item_ids = [item['ItemID'] for item in items]
@@ -62,6 +71,7 @@ def get_filter_listings():
     size = request.args.get('size')
     condition = request.args.get('condition')
     tags = request.args.get('tags')
+    user_id = request.args.get('user_id', type=int)
 
     cursor = db.get_db().cursor()
 
@@ -73,10 +83,15 @@ def get_filter_listings():
         JOIN Users u ON i.OwnerID = u.UserID
         LEFT JOIN ItemTags it ON i.ItemID = it.ItemID
         LEFT JOIN Tags t ON it.TagID = t.TagID
-        WHERE i.IsAvailable = 1 AND i.Type = 'Swap'
+        WHERE i.IsAvailable = 1 AND i.Type = 'swap'
     '''
 
     query_params = []
+
+    # Exclude items owned by the current user
+    if user_id:
+        the_query += ' AND i.OwnerID != %s'
+        query_params.append(user_id)
 
     if category:
         the_query += ' AND i.Category = %s'
@@ -177,6 +192,7 @@ def track_swap(UserID):
     the_query = '''
          SELECT
             o.OrderID,
+            o.CreatedAt,
             CASE
                 WHEN o.GivenByID = %s THEN 'Sending'
                 WHEN o.ReceiverID = %s THEN 'Receiving'
@@ -219,13 +235,36 @@ def upload_listing():
         item_type = data['Type']
         condition = data['Condition']
         owner_id = data['OwnerID']
+        tags = data.get('Tags', [])  # Get tags, default to empty list
 
         the_query = '''
-            INSERT INTO Items (Title, Category, Description, Size, Type, Condition, OwnerID, IsAvailable)
-            VALUES (%s, %s, %s, %s, %s, %s, %s, 1);
+            INSERT INTO Items (Title, Category, Description, Size, `Type`, `Condition`, OwnerID, IsAvailable, ListedAt)
+            VALUES (%s, %s, %s, %s, %s, %s, %s, 1, NOW());
         '''
 
         cursor.execute(the_query, (title, category, description, size, item_type, condition, owner_id))
+        item_id = cursor.lastrowid  # Get the ID of the inserted item
+        
+        # Handle tags if provided
+        if tags:
+            for tag_title in tags:
+                # Check if tag exists, if not create it
+                check_tag_query = 'SELECT TagID FROM Tags WHERE Title = %s'
+                cursor.execute(check_tag_query, (tag_title,))
+                tag_result = cursor.fetchone()
+                
+                if tag_result:
+                    tag_id = tag_result['TagID']
+                else:
+                    # Create new tag
+                    insert_tag_query = 'INSERT INTO Tags (Title) VALUES (%s)'
+                    cursor.execute(insert_tag_query, (tag_title,))
+                    tag_id = cursor.lastrowid
+                
+                # Link tag to item
+                insert_item_tag_query = 'INSERT INTO ItemTags (ItemID, TagID) VALUES (%s, %s)'
+                cursor.execute(insert_item_tag_query, (item_id, tag_id))
+        
         db.get_db().commit()    
         the_response = make_response(jsonify({"message": "Listing uploaded successfully."}))
         the_response.status_code = 200
@@ -238,11 +277,364 @@ def upload_listing():
         the_response.status_code = 500
         return the_response
 
+#-----User Story 5------
+# As a Swapper, I want to initiate a swap request by selecting one of my items to swap for another item.
+@swapper.route('/initiate_swap/', methods=['POST'])
+def initiate_swap():
+    try:
+        cursor = db.get_db().cursor()
+        data = request.get_json()
+        
+        # Item they want (from another user)
+        desired_item_id = data.get('desired_item_id')
+        # Item they're offering (their own item)
+        offered_item_id = data.get('offered_item_id')
+        requester_id = data.get('requester_id')
+        
+        # Validate items exist and are available
+        cursor.execute('''
+            SELECT OwnerID, IsAvailable, Type
+            FROM Items
+            WHERE ItemID = %s
+        ''', (desired_item_id,))
+        desired_item = cursor.fetchone()
+        
+        if not desired_item or not desired_item['IsAvailable'] or desired_item['Type'] != 'swap':
+            return make_response(jsonify({"error": "Desired item not available for swap"}), 400)
+        
+        owner_id = desired_item['OwnerID']
+        
+        if owner_id == requester_id:
+            return make_response(jsonify({"error": "Cannot swap with yourself"}), 400)
+        
+        cursor.execute('''
+            SELECT OwnerID, IsAvailable, Type
+            FROM Items
+            WHERE ItemID = %s
+        ''', (offered_item_id,))
+        offered_item = cursor.fetchone()
+        
+        if not offered_item or offered_item['OwnerID'] != requester_id or not offered_item['IsAvailable']:
+            return make_response(jsonify({"error": "Offered item not available or not owned by you"}), 400)
+        
+        # Create swap order (requester is giving their item, receiving desired item)
+        cursor.execute('''
+            INSERT INTO Orders (GivenByID, ReceiverID, CreatedAt, ShippingID)
+            VALUES (%s, %s, NOW(), NULL)
+        ''', (requester_id, owner_id))
+        order_id = cursor.lastrowid
+        
+        # Add both items to the order
+        cursor.execute('''
+            INSERT INTO OrderItems (OrderID, ItemID)
+            VALUES (%s, %s)
+        ''', (order_id, offered_item_id))
+        
+        cursor.execute('''
+            INSERT INTO OrderItems (OrderID, ItemID)
+            VALUES (%s, %s)
+        ''', (order_id, desired_item_id))
+        
+        # Mark both items as unavailable
+        cursor.execute('''
+            UPDATE Items SET IsAvailable = 0 WHERE ItemID IN (%s, %s)
+        ''', (offered_item_id, desired_item_id))
+        
+        db.get_db().commit()
+        
+        return make_response(jsonify({
+            "message": "Swap request created successfully",
+            "order_id": order_id
+        }), 201)
+        
+    except Exception as e:
+        db.get_db().rollback()
+        return make_response(jsonify({"error": str(e)}), 500)
 
+# Get user's items available for swap
+@swapper.route('/my_items/<int:user_id>', methods=['GET'])
+def get_my_items(user_id):
+    cursor = db.get_db().cursor()
+    
+    cursor.execute('''
+        SELECT ItemID, Title, Category, Description, Size, `Condition`, IsAvailable, `Type`, ListedAt
+        FROM Items
+        WHERE OwnerID = %s AND `Type` = 'swap'
+        ORDER BY ListedAt DESC
+    ''', (user_id,))
+    
+    items = cursor.fetchall()
+    
+    # Get tags for all items
+    item_ids = [item['ItemID'] for item in items]
+    tags_dict = {}
+    
+    if item_ids:
+        placeholders = ', '.join(['%s'] * len(item_ids))
+        tags_query = f'''
+            SELECT it.ItemID, t.Title
+            FROM ItemTags it
+            JOIN Tags t ON it.TagID = t.TagID
+            WHERE it.ItemID IN ({placeholders})
+        '''
+        cursor.execute(tags_query, item_ids)
+        tag_rows = cursor.fetchall()
+        
+        for row in tag_rows:
+            item_id = row['ItemID']
+            if item_id not in tags_dict:
+                tags_dict[item_id] = []
+            tags_dict[item_id].append(row['Title'])
+    
+    # Add tags to each item
+    for item in items:
+        item_id = item['ItemID']
+        item['Tags'] = ', '.join(tags_dict.get(item_id, []))
+    
+    return make_response(jsonify(items), 200)
 
+# Get ongoing trades for a user
+@swapper.route('/trades/ongoing/<int:user_id>', methods=['GET'])
+def get_ongoing_trades(user_id):
+    cursor = db.get_db().cursor()
+    
+    # Get trades where user is either giving or receiving
+    cursor.execute('''
+        SELECT 
+            o.OrderID as trade_id,
+            CASE 
+                WHEN o.GivenByID = %s THEN 'outgoing'
+                WHEN o.ReceiverID = %s THEN 'incoming'
+            END as type,
+            CASE 
+                WHEN o.GivenByID = %s THEN u2.Name
+                WHEN o.ReceiverID = %s THEN u1.Name
+            END as username,
+            CASE 
+                WHEN o.GivenByID = %s THEN u2.UserID
+                WHEN o.ReceiverID = %s THEN u1.UserID
+            END as other_user_id,
+            'Pending' as status,
+            NULL as location,
+            NULL as date,
+            NULL as your_item_img,
+            NULL as their_item_img,
+            0 as is_free
+        FROM Orders o
+        JOIN Users u1 ON o.GivenByID = u1.UserID
+        JOIN Users u2 ON o.ReceiverID = u2.UserID
+        LEFT JOIN Shippings s ON o.ShippingID = s.ShippingID
+        WHERE (o.GivenByID = %s OR o.ReceiverID = %s)
+        AND s.DateArrived IS NULL
+        ORDER BY o.CreatedAt DESC
+    ''', (user_id, user_id, user_id, user_id, user_id, user_id, user_id, user_id))
+    
+    trades = cursor.fetchall()
+    
+    # Get items for each trade
+    for trade in trades:
+        cursor.execute('''
+            SELECT i.ItemID, i.Title, img.ImageURL
+            FROM OrderItems oi
+            JOIN Items i ON oi.ItemID = i.ItemID
+            LEFT JOIN Images img ON i.ItemID = img.ItemID AND img.ImageOrderNum = 1
+            WHERE oi.OrderID = %s
+        ''', (trade['trade_id'],))
+        items = cursor.fetchall()
+        
+        # Determine which item is yours and which is theirs
+        for item in items:
+            cursor.execute('SELECT OwnerID FROM Items WHERE ItemID = %s', (item['ItemID'],))
+            owner = cursor.fetchone()
+            if owner['OwnerID'] == user_id:
+                trade['your_item_img'] = item.get('ImageURL')
+            else:
+                trade['their_item_img'] = item.get('ImageURL')
+    
+    return make_response(jsonify(trades), 200)
 
+# Get completed trades for a user
+@swapper.route('/trades/completed/<int:user_id>', methods=['GET'])
+def get_completed_trades(user_id):
+    cursor = db.get_db().cursor()
+    
+    cursor.execute('''
+        SELECT 
+            o.OrderID as trade_id,
+            CASE 
+                WHEN o.GivenByID = %s THEN u2.Name
+                WHEN o.ReceiverID = %s THEN u1.Name
+            END as username,
+            s.DateArrived as completed_date,
+            NULL as location,
+            NULL as your_item_img,
+            NULL as their_item_img
+        FROM Orders o
+        JOIN Users u1 ON o.GivenByID = u1.UserID
+        JOIN Users u2 ON o.ReceiverID = u2.UserID
+        JOIN Shippings s ON o.ShippingID = s.ShippingID
+        WHERE (o.GivenByID = %s OR o.ReceiverID = %s)
+        AND s.DateArrived IS NOT NULL
+        ORDER BY s.DateArrived DESC
+    ''', (user_id, user_id, user_id, user_id))
+    
+    trades = cursor.fetchall()
+    
+    # Get items for each trade
+    for trade in trades:
+        cursor.execute('''
+            SELECT i.ItemID, img.ImageURL
+            FROM OrderItems oi
+            JOIN Items i ON oi.ItemID = i.ItemID
+            LEFT JOIN Images img ON i.ItemID = img.ItemID AND img.ImageOrderNum = 1
+            WHERE oi.OrderID = %s
+        ''', (trade['trade_id'],))
+        items = cursor.fetchall()
+        
+        for item in items:
+            cursor.execute('SELECT OwnerID FROM Items WHERE ItemID = %s', (item['ItemID'],))
+            owner = cursor.fetchone()
+            if owner['OwnerID'] == user_id:
+                trade['your_item_img'] = item.get('ImageURL')
+            else:
+                trade['their_item_img'] = item.get('ImageURL')
+    
+    return make_response(jsonify(trades), 200)
 
-   
+# Accept a swap request
+@swapper.route('/trades/<int:trade_id>/accept', methods=['PUT'])
+def accept_trade(trade_id):
+    try:
+        cursor = db.get_db().cursor()
+        user_id = request.args.get('user_id', type=int)
+        
+        # Verify user is the receiver
+        cursor.execute('''
+            SELECT ReceiverID FROM Orders WHERE OrderID = %s
+        ''', (trade_id,))
+        order = cursor.fetchone()
+        
+        if not order or order['ReceiverID'] != user_id:
+            return make_response(jsonify({"error": "Unauthorized"}), 403)
+        
+        # Create shipping records for both items (simplified - in real app would need separate shippings)
+        # For now, just mark as accepted by creating a shipping record
+        cursor.execute('''
+            INSERT INTO Shippings (Carrier, TrackingNum, DateShipped, DateArrived)
+            VALUES ('Pending', 'TBD', CURDATE(), NULL)
+        ''')
+        shipping_id = cursor.lastrowid
+        
+        cursor.execute('''
+            UPDATE Orders SET ShippingID = %s WHERE OrderID = %s
+        ''', (shipping_id, trade_id))
+        
+        db.get_db().commit()
+        
+        return make_response(jsonify({"message": "Trade accepted"}), 200)
+    except Exception as e:
+        db.get_db().rollback()
+        return make_response(jsonify({"error": str(e)}), 500)
 
+# Reject a swap request
+@swapper.route('/trades/<int:trade_id>/reject', methods=['PUT'])
+def reject_trade(trade_id):
+    try:
+        cursor = db.get_db().cursor()
+        user_id = request.args.get('user_id', type=int)
+        
+        # Verify user is the receiver
+        cursor.execute('''
+            SELECT ReceiverID FROM Orders WHERE OrderID = %s
+        ''', (trade_id,))
+        order = cursor.fetchone()
+        
+        if not order or order['ReceiverID'] != user_id:
+            return make_response(jsonify({"error": "Unauthorized"}), 403)
+        
+        # Get items in the order and make them available again
+        cursor.execute('''
+            SELECT ItemID FROM OrderItems WHERE OrderID = %s
+        ''', (trade_id,))
+        items = cursor.fetchall()
+        
+        for item in items:
+            cursor.execute('''
+                UPDATE Items SET IsAvailable = 1 WHERE ItemID = %s
+            ''', (item['ItemID'],))
+        
+        # Delete order items and order
+        cursor.execute('DELETE FROM OrderItems WHERE OrderID = %s', (trade_id,))
+        cursor.execute('DELETE FROM Orders WHERE OrderID = %s', (trade_id,))
+        
+        db.get_db().commit()
+        
+        return make_response(jsonify({"message": "Trade rejected"}), 200)
+    except Exception as e:
+        db.get_db().rollback()
+        return make_response(jsonify({"error": str(e)}), 500)
+
+# Cancel a swap (by the initiator)
+@swapper.route('/trades/<int:trade_id>/cancel', methods=['PUT'])
+def cancel_trade(trade_id):
+    try:
+        cursor = db.get_db().cursor()
+        user_id = request.args.get('user_id', type=int)
+        
+        # Verify user is the initiator (GivenByID)
+        cursor.execute('''
+            SELECT GivenByID FROM Orders WHERE OrderID = %s
+        ''', (trade_id,))
+        order = cursor.fetchone()
+        
+        if not order or order['GivenByID'] != user_id:
+            return make_response(jsonify({"error": "Unauthorized"}), 403)
+        
+        # Get items and make them available again
+        cursor.execute('''
+            SELECT ItemID FROM OrderItems WHERE OrderID = %s
+        ''', (trade_id,))
+        items = cursor.fetchall()
+        
+        for item in items:
+            cursor.execute('''
+                UPDATE Items SET IsAvailable = 1 WHERE ItemID = %s
+            ''', (item['ItemID'],))
+        
+        # Delete order items and order
+        cursor.execute('DELETE FROM OrderItems WHERE OrderID = %s', (trade_id,))
+        cursor.execute('DELETE FROM Orders WHERE OrderID = %s', (trade_id,))
+        
+        db.get_db().commit()
+        
+        return make_response(jsonify({"message": "Trade cancelled"}), 200)
+    except Exception as e:
+        db.get_db().rollback()
+        return make_response(jsonify({"error": str(e)}), 500)
+
+# Utility endpoint to set a user's role to swapper
+@swapper.route('/set_user_role/<int:user_id>', methods=['PUT'])
+def set_user_role(user_id):
+    """
+    Set a user's role to 'swapper'
+    """
+    try:
+        cursor = db.get_db().cursor()
+        
+        cursor.execute('''
+            UPDATE Users
+            SET Role = 'swapper'
+            WHERE UserID = %s
+        ''', (user_id,))
+        
+        db.get_db().commit()
+        
+        return make_response(jsonify({
+            "message": f"User {user_id} role updated to swapper"
+        }), 200)
+        
+    except Exception as e:
+        db.get_db().rollback()
+        return make_response(jsonify({"error": str(e)}), 500)
 
 

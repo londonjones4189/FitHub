@@ -77,7 +77,7 @@ st.markdown(f'<div class="swapper-title">👋 Welcome, {st.session_state.get("fi
 st.markdown('<div class="section-subtitle">What would you like to do today?</div>', unsafe_allow_html=True)
 st.write("")  # spacing
 
-# Main buttons - Feed and Status (half and half)
+# Main buttons - Feed and My Swaps
 col1, col2 = st.columns([1, 1])
 
 with col1:
@@ -86,6 +86,6 @@ with col1:
         st.switch_page('pages/50_Swapper_Feed.py')
 
 with col2:
-    if st.button("📊 View Trade Status", use_container_width=True, type="primary"):
-        logger.info("Navigating to Swapper Status")
-        st.switch_page('pages/51_Swapper_Status.py')
+    if st.button("🔄 My Swaps", use_container_width=True, type="primary"):
+        logger.info("Navigating to My Swaps")
+        st.switch_page('pages/52_My_Swaps.py')
