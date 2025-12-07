@@ -8,6 +8,36 @@ from backend.db_connection import db
 dataAnalyst = Blueprint('dataAnalysts', __name__)
 
 
+
+#-----New------
+#As a Senior Data Analyst, I want to view all users
+@dataAnalyst.route('/users', methods=['GET'])
+def get_all_users():
+    cursor = db.get_db().cursor()
+
+    the_query = '''
+        SELECT
+            UserID,
+            Name,
+            Email,
+            Phone, 
+            Address, 
+            DOB, 
+            Gender, 
+            IsActive
+        FROM Users
+    '''
+
+    cursor.execute(the_query)
+    theData = cursor.fetchall()
+
+    the_response = make_response(jsonify(theData))
+    the_response.status_code = 200
+    the_response.mimetype = 'application/json'
+    return the_response
+#-----User Story 1------
+
+
 #-----User Story 1------
 #As a Senior Data Analyst, I want to view available listings with
 # their posting dates, so I can monitor listing performance.
@@ -62,7 +92,6 @@ def get_all_users_by_age_and_gender(gender, agemin, agemax):
     the_response.status_code = 200
     the_response.mimetype = 'application/json'
     return the_response
-
 #-----User Story 2------
 
 
@@ -96,8 +125,8 @@ def get_listings_category():
 #-----User Story 4------
 #As a Senior Data Analyst, I want to track swaps and takes per user, so I can measure engagement.
 
-@dataAnalyst.route('/users/countorders', methods=['GET'])
-def get_orders_per_users():
+@dataAnalyst.route('/users/engagement', methods=['GET'])
+def get_engagement():
     cursor = db.get_db().cursor()
 
     the_query = '''
