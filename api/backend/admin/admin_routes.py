@@ -26,42 +26,35 @@ def error_response(message, status_code=500):
 
 # REPORT ROUTES
 # ============================================================================
-
-# USER STORY 1 — View Pending Reports with filtering
 @admin.route('/reports', methods=['GET'])
 def get_reports():
-    """
-    Get all reports with optional filtering
-    Query params: ?status=pending|resolved
-    """
     status_filter = request.args.get('status', 'all')
-    
+
     cursor = db.get_db().cursor()
-    
+
     if status_filter == 'pending':
         cursor.execute("""
-            SELECT ReportID, Severity, Note, ReportedItem, Resolved, ResolvedAt
+            SELECT ReportID, Severity, Note, ReportedItem, ReportedUser, Resolved, ResolvedAt
             FROM Reports
             WHERE Resolved = 0
             ORDER BY ReportID DESC;
         """)
     elif status_filter == 'resolved':
         cursor.execute("""
-            SELECT ReportID, Severity, Note, ReportedItem, Resolved, ResolvedAt
+            SELECT ReportID, Severity, Note, ReportedItem, ReportedUser, Resolved, ResolvedAt
             FROM Reports
             WHERE Resolved = 1
             ORDER BY ResolvedAt DESC;
         """)
     else:
         cursor.execute("""
-            SELECT ReportID, Severity, Note, ReportedItem, Resolved, ResolvedAt
+            SELECT ReportID, Severity, Note, ReportedItem, ReportedUser, Resolved, ResolvedAt
             FROM Reports
             ORDER BY Resolved, ReportID DESC;
         """)
-    
+
     data = cursor.fetchall()
     return success_response("Reports retrieved successfully", data)
-
 
 # USER STORY 1 — View Pending Reports (Legacy Endpoint)
 # As an Admin, I want to view pending reports in a simple format,
@@ -71,13 +64,14 @@ def get_pending_reports():
     """Get all pending (unresolved) reports"""
     cursor = db.get_db().cursor()
     cursor.execute("""
-        SELECT ReportID, Severity, Note, ReportedItem
+        SELECT ReportID, Severity, Note, ReportedItem, ReportedUser
         FROM Reports
         WHERE Resolved = 0
         ORDER BY ReportID DESC;
     """)
     data = cursor.fetchall()
-    return success_response("Pending reports retrieved", data)
+    return success_response("Reports retrieved successfully", data)
+
 
 
 # USER STORY 1 — Resolve/Unresolve Reports (Unified Endpoint)
