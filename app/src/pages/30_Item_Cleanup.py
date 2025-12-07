@@ -10,7 +10,7 @@ st.set_page_config(layout="wide")
 SideBarLinks()
 add_logo("assets/FitHublogo.png")
 
-API_BASE = "http://api:4000/a"
+API_BASE = "http://api:4000/admin"
 
 st.markdown("""
 <style>
@@ -58,6 +58,7 @@ st.markdown('<div class="page-title">🧹 Item Cleanup Tools</div>', unsafe_allo
 
 
 # Remove Duplicate Items
+#Need to show list of items wheere there are duplicates
 st.markdown('<div class="section-title">Remove Duplicate Items</div>', unsafe_allow_html=True)
 
 if st.button("Delete Duplicate Items", use_container_width=True):
@@ -69,6 +70,7 @@ if st.button("Delete Duplicate Items", use_container_width=True):
 
 
 # Delete Specific Item
+#Need to again show list of items
 st.markdown('<div class="section-title">Delete Specific Item</div>', unsafe_allow_html=True)
 
 item_id = st.number_input("Enter Item ID to Delete", min_value=1, step=1)

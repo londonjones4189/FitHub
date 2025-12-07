@@ -8,7 +8,7 @@ import requests
 st.set_page_config(layout="wide")
 SideBarLinks()
 
-API_BASE = "http://api:4000/a"
+API_BASE = "http://api:4000/admin"
 
 st.markdown("""
 <style>
@@ -56,6 +56,7 @@ st.markdown('<div class="page-title">Admin: User Management</div>', unsafe_allow
 col1, col2 = st.columns(2)
 
 # UPDATE USER ROLE
+#need to change message signals so it shows the updated users profile
 with col1:
     st.markdown('<div class="section-title">Update User Role</div>', unsafe_allow_html=True)
 
@@ -79,6 +80,8 @@ with col1:
 
 
 # DEACTIVATE USER
+
+#need to change message signals so it shows the updated users profile
 with col2:
     st.markdown('<div class="section-title">Deactivate User</div>', unsafe_allow_html=True)
 
