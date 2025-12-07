@@ -1,6 +1,13 @@
 # FitHub: A Sustainable Clothing Trading Platform
 # A CS 3200 Group Project Fall 2025 
 
+Group Members:
+Micah Cheng
+Will Cramer
+London Jones 
+Yurika Kan
+Samuel Yao
+
 FitHub is a digital clothing exchange platform designed to help people refresh their wardrobes sustainably. Instead of buying new clothes or engaging in bidding wars on platforms like Depop or Ebay, FitHub allows users to swap, take, or donate items based on personalized style and profiles. FitHub’s Flask REST API and Streamlit UI work together to support finding your dream wardrobe through analytical recommendations.
 
 The platform serves two main user groups:
@@ -53,9 +60,9 @@ Python 3.11 if you want to run the backend/frontend without Docker
 
 ##  Instructions 
 
-How to Run the Project (Using Docker)
+How to Run the Project 
 
-Follow these steps to run a fresh version of FitHub on your machine.
+Follow these steps to run a fresh version of FitHub:
 
 1. Pull the Latest Version of the Project
 
@@ -63,19 +70,47 @@ In a terminal:
 
 git checkout main
 git pull
-Start All Containers
-Terminal 
-docker compose up --build
+Start All Containers:
+
+Before running the project, create a valid .env file inside the api/ directory.
+
+Create the file:
+
+api/.env
 
 
-This will build and start:
+Paste in these values:
 
-Service	Description	URL(go to the front end link to test):
-web-app	Streamlit frontend	http://localhost:8501/
+SECRET_KEY=imsofitted
+DB_USER=root
+DB_HOST=db
+DB_PORT=3306
+DB_NAME=fithub
 
-web-api	Flask REST API backend	http://localhost:4000/
-
-mysql_db	MySQL 8+ Database	localhost:3306 (mapped 3200)
+MYSQL_ROOT_PASSWORD=password
 
 
-Stop your containers: docker compose down
+Once the .env file has been created, you may start the application using:
+
+docker compose up -d --build
+
+To verify that the system and test is working go to these links:
+
+Frontend:
+
+http://localhost:8501
+
+
+Backend API:
+
+http://localhost:4000
+
+
+Test GET example:
+
+http://localhost:4000/d/listings
+
+
+To stop the services:
+
+docker compose down
