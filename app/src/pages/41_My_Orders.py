@@ -26,7 +26,7 @@ with left_col:
 
         if orders:
             #Filter active orders (not yet shipped)
-            active_orders = [order for order in orders if not o.get('DateArrived')]
+            active_orders = [order for order in orders if not orders.get('DateArrived')]
 
             if active_orders:
                 with st.container(height = 500, border = True):
@@ -53,7 +53,7 @@ with left_col:
                                     if st.button("Cancel Order", key=f"cancel_{order['OrderID']}", type="secondary"):
                                         cancel_response = requests.delete(
                                             f"{API_BASE}/orders/{order['OrderID']}",
-                                            params={'user_id': USER_ID}
+                                            params={'user_id': user_id}
                                         )
                                         if cancel_response.status_code == 200:
                                             st.success("✅ Order cancelled!")
