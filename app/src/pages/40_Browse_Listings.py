@@ -1,9 +1,6 @@
-import logging
-logger = logging.getLogger(__name__)
-
 import streamlit as st
 import requests
-import pandas as pd
+import time
 from modules.nav import SideBarLinks
 
 st.set_page_config(layout="wide")
@@ -16,51 +13,84 @@ st.title("👕 Browse Available Listings")
 #FILTERS
 st.subheader("Filter Listings")
 with st.container(border=True):
-    col1, col2, col3 = st.columns(3)
+    col1, col2, col3, col4 = st.columns(4)
 
     with col1:
-        size_filter = st.selectbox(
-            "Select Size",
-            options=["All", "S", "M", "L", "XL", "XXL"] #idk how many sizes we want or how to do numeric sizes
+        category_filter = st.selectbox(
+            "Select Category",
+            options=["All", "shoes", "t-shirt", "jacket", "dress", "jeans", "sweater", "coat", "skirt", "hoodie", "shirt", "blouse", "pants", "shorts", "top", "vest", "blazer", "tank top"]
         )
 
     with col2:
-        condition_filter = st.multiselect(
-            "Select Condition(s)",
-            options=["New", "Like New", "Good", "Fair", "Poor"]
+        size_filter = st.selectbox(
+            "Select Size",
+            options=["All", "S", "M", "L"]
         )
 
     with col3:
-        tags_filter = st.multiselect(
-            "Select Tags",
-            options=["Vintage", "Casual", "Y2K", "Formal", "Sport"]
+        condition_filter = st.multiselect(
+            "Select Condition(s)",
+            options=["Excellent", "Very good", "Good", "Fair"]
         )
 
-        st.divider()
+    with col4:
+        tags_filter = st.multiselect(
+            "Select Tags",
+            options=["Y2K", "Chic", "Bohemian", "Preppy", "Retro", "Eclectic", "Sporty", "Edgy", "Minimalist", "Sophisticated", "Urban"]
+        )
 
-#GET LISTINGS
-try:
-    params = {}
-    if size_filter != "All":
-        params['size'] = size_filter
-    if condition_filter:
-        params['condition'] = ','.join(condition_filter)
-    if tags_filter:
-        params['tags'] = ','.join(tags_filter)
+params = {}
+if category_filter != "All":
+    params['category'] = category_filter
+if size_filter != "All":
+    params['size'] = size_filter
+if condition_filter:
+    params['condition'] = ','.join(condition_filter)
+if tags_filter:
+    params['tags'] = ','.join(tags_filter)
 
-    if params:
-        response = requests.get(f"{API_BASE}/listings/filter", params=params)
-    else:
-        response = requests.get(f"{API_BASE}/listings/up_for_grabs")
+if params:
+    response = requests.get(f"{API_BASE}/listings/filter", params=params)
+else:
+    response = requests.get(f"{API_BASE}/listings/up_for_grabs")
 
-    listings = response.json()
+listings = response.json()
 
-    if listings:
+if listings:
         st.success(f"Found {len(listings)} listings matching your criteria.")
+
+        # Category emoji mapping
+        category_emojis = {
+            'shoes': '👟',
+            't-shirt': '👕',
+            'jacket': '🧥',
+            'dress': '👗',
+            'jeans': '👖',
+            'sweater': '🧶',
+            'coat': '🧥',
+            'skirt': '👗',
+            'hoodie': '🧥',
+            'shirt': '👔',
+            'blouse': '👔',
+            'pants': '👖',
+            'shorts': '🩳',
+            'top': '👚',
+            'vest': '🎽',
+            'blazer': '👔',
+            'tank top': '👕'
+        }
+        
+        def get_category_emoji(category):
+            if category:
+                category_lower = str(category).lower()
+                return category_emojis.get(category_lower, '👕')
+            return '👕'
 
         with st.container(height = 600, border = True):
             for item in listings:
-                with st.expander(f"🏷️ {item.get('Title', 'Item')}", expanded=False):
+                category = item.get('Category', '')
+                emoji = get_category_emoji(category)
+                with st.expander(f"{emoji} {item.get('Title', 'Item')}", expanded=False):
                     cols = st.columns(2)
                     with cols[0]:
                         st.write(f"**Category:** {item.get('Category', 'N/A')}")
@@ -71,14 +101,22 @@ try:
                         st.write(f"**Owner:** {item.get('OwnerName', 'N/A')}")
                         st.write(f"**Tags:** {item.get('Tags', 'N/A')}")
                         st.write(f"**Listed At:** {item.get('ListedAt', 'N/A')}")
-                st.write(f"**Description:** {item.get('Description', 'N/A')}")
 
-                if st.button(f"Request Item: {item.get('Title', 'Item')}", key=item.get('ItemID')):
-                    st.success(f"✅ Request sent for {item['Title']}!")
+                    item_id = item.get('ItemID')
+                    user_id = st.session_state.get('user_id', 8)
+                    
+                    check_response = requests.get(f"{API_BASE}/check_request/{user_id}/{item_id}")
+                    is_requested = check_response.json().get('requested', False)
+                    
+                    if is_requested:
+                        st.info("✅ Already requested")
+                    else:
+                        if st.button(f"Request Item: {item.get('Title', 'Item')}", key=f"request_{item_id}", type="primary"):
+                            response = requests.post(f"{API_BASE}/request_item", json={"item_id": item_id, "user_id": user_id})
+                            if response.status_code == 201:
+                                st.toast(f"Requested: {item['Title']}", icon="✅")
+                                time.sleep(1.5)
+                                st.rerun()
 
-    else:
-        st.info("No listings found matching your criteria.")
-
-except Exception as e:
-    logger.error(f"Error fetching listings: {e}")
-    st.error("An error occurred while fetching listings. Please try again later.")
+else:
+    st.info("No listings found matching your criteria.")

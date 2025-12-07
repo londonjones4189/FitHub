@@ -11,7 +11,7 @@ add_logo("assets/FitHublogo.png")
 
 
 
-API_BASE = "http://api:4000/a"
+API_BASE = "http://api:4000/admin"
 
 st.markdown("""
 <style>
@@ -62,13 +62,19 @@ st.markdown('<div class="section-title">View Pending Reports</div>', unsafe_allo
 try:
     response = requests.get(f"{API_BASE}/reports/pending")
     if response.status_code == 200:
-        reports = response.json()
-        st.write(f"Found **{len(reports)} pending reports**")
-
-        for report in reports:
-            with st.expander(f"Report #{report['ReportID']} — Severity {report['Severity']}"):
-                st.write(f"**Note:** {report['Note']}")
-                st.write(f"**Reported Item:** {report['ReportedItem']}")
+        result = response.json()
+        # Handle standardized response format
+        reports = result.get('data', result) if isinstance(result, dict) else result
+        
+        if isinstance(reports, list):
+            st.write(f"Found **{len(reports)} pending reports**")
+            
+            for report in reports:
+                with st.expander(f"Report #{report['ReportID']} — Severity {report['Severity']}"):
+                    st.write(f"**Note:** {report['Note']}")
+                    st.write(f"**Reported Item:** {report['ReportedItem']}")
+        else:
+            st.info("No pending reports found.")
     else:
         st.error("Failed to fetch reports.")
 except requests.exceptions.RequestException:

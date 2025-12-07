@@ -14,7 +14,7 @@ API_BASE = "http://api:4000/t"
 st.title('📍 Track My Packages')
 
 # For demo, use hardcoded user ID
-user_id = 3
+user_id = st.session_state.get('user_id', 8)
 
 try:
     response = requests.get(f"{API_BASE}/track_package/{user_id}")
