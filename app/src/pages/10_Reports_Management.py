@@ -5,95 +5,76 @@ import streamlit as st
 import requests
 from streamlit_extras.app_logo import add_logo
 from modules.nav import SideBarLinks
+from datetime import datetime
+
 st.set_page_config(layout="wide")
 SideBarLinks()
-add_logo("assets/FitHublogo.png")
-
-
 
 API_BASE = "http://api:4000/admin"
 
-st.markdown("""
-<style>
-
-.block-container {
-    padding-top: 2rem;
-    max-width: 95%;
-}
-
-.page-title {
-    color: #328E6E;
-    font-size: 42px;
-    font-weight: bold;
-    text-align: center;
-    margin-bottom: 10px;
-}
-
-.section-title {
-    color: #328E6E;
-    font-size: 26px;
-    font-weight: 600;
-    margin-top: 25px;
-}
-
-div.stButton > button {
-    background-color: #328E6E;
-    color: #E1EEBC;
-    height: 3.5em;
-    width: 100%;
-    font-size: 20px;
-    font-weight: bold;
-    border-radius: 10px;
-    border: none;
-}
-
-div.stButton > button:hover {
-    background-color: #2a7359;
-}
-
-</style>
-""", unsafe_allow_html=True)
-
 st.markdown('<div class="page-title">📑 Reports Management</div>', unsafe_allow_html=True)
 
-# View Pending Reports
-st.markdown('<div class="section-title">View Pending Reports</div>', unsafe_allow_html=True)
+st.subheader("All Reports 🚨")
 
-try:
-    response = requests.get(f"{API_BASE}/reports/pending")
-    if response.status_code == 200:
-        result = response.json()
-        # Handle standardized response format
-        reports = result.get('data', result) if isinstance(result, dict) else result
-        
-        if isinstance(reports, list):
-            st.write(f"Found **{len(reports)} pending reports**")
-            
-            for report in reports:
-                with st.expander(f"Report #{report['ReportID']} — Severity {report['Severity']}"):
-                    st.write(f"**Note:** {report['Note']}")
-                    st.write(f"**Reported Item:** {report['ReportedItem']}")
-        else:
-            st.info("No pending reports found.")
+# Initialize session state
+if 'reports' not in st.session_state:
+    st.session_state.reports = None
+
+status = st.selectbox("Status", ["all", "pending", "resolved"])
+
+# Function to fetch reports
+def fetch_reports(status_filter):
+    try:
+        response = requests.get(f"{API_BASE}/reports?status={status_filter}")
+        if response.status_code == 200:
+            return response.json().get('data', [])
+    except Exception as e:
+        st.error(f"Failed to fetch reports: {str(e)}")
+    return None
+
+if st.button("Get Reports", type="primary"):
+    st.session_state.reports = fetch_reports(status)
+
+# Display reports if they exist
+if st.session_state.reports is not None:
+    reports = st.session_state.reports
+
+    if reports:
+        st.write(f"Found **{len(reports)} {status} reports**")
+
+        with st.container():
+            for idx, report in enumerate(reports):
+                with st.expander(f"Report #{report.get('ReportID', 'N/A')} — Severity {report.get('Severity', 'N/A')}"):
+                    st.write(f"**Reported Item:** {report.get('ReportedItem', 'N/A')}")
+                    st.write(f"**Reported User:** {report.get('ReportedUser', 'N/A')}")
+                    st.write(f"**Note:** {report.get('Note', 'N/A')}")
+                    st.write(f"**Resolved:** {'Yes' if report.get('Resolved') else 'No'}")
+                    if report.get('ResolvedAt'):
+                        st.write(f"**Resolved At:** {report['ResolvedAt']}")
+
+                    st.markdown("---")
+                    is_resolved = report.get('Resolved')
+                    report_id = report.get('ReportID')
+
+                    if is_resolved:
+                        # Show disabled button for resolved reports
+                        st.button(f"✓ Resolved", key=f"resolved_{report_id}", disabled=True)
+                    else:
+                        # Show active button for unresolved reports
+                        if st.button(f"Mark as Resolved", key=f"resolve_{report_id}", type="primary"):
+                            try:
+                                resp = requests.put(
+                                    f"{API_BASE}/reports/{report_id}",
+                                    json={"resolved": True}
+                                )
+                                if resp.status_code == 200:
+                                    # Refetch reports with current filter instead of updating in place
+                                    st.session_state.reports = fetch_reports(status)
+                                    st.success("Report marked as resolved!")
+                                    st.rerun()
+                                else:
+                                    st.error("Failed to update report")
+                            except Exception as e:
+                                st.error(f"Error: {str(e)}")
     else:
-        st.error("Failed to fetch reports.")
-except requests.exceptions.RequestException:
-    st.error("Could not connect")
-
-
-
-# Resolve a Report
-st.markdown('<div class="section-title">Resolve a Report</div>', unsafe_allow_html=True)
-
-col1, col2 = st.columns(2)
-
-with col1:
-    report_id = st.number_input("Enter Report ID", min_value=1, step=1)
-
-with col2:
-    if st.button("Resolve Report"):
-        try:
-            resp = requests.put(f"{API_BASE}/reports/{report_id}/resolve")
-            st.write(resp.json())
-        except:
-            st.error("Could not resolve the report.")
+        st.info(f"No {status} reports found")
