@@ -422,23 +422,24 @@ insert into Items (Title, Category, Description, Size, `Condition`, IsAvailable,
 insert into Items (Title, Category, Description, Size, `Condition`, IsAvailable, OwnerID, ListedAt, `Type`) values ('Puffer Winter Coat', 'coat', 'Long black puffer, very warm with hood', 'L', 'Excellent', true, 9, '2025-02-17 10:00:00', 'swap');
 insert into Items (Title, Category, Description, Size, `Condition`, IsAvailable, OwnerID, ListedAt, `Type`) values ('Corduroy Mini Skirt', 'skirt', 'Brown corduroy mini skirt with pockets', 'S', 'Very good', true, 10, '2025-02-17 16:20:00', 'take');
 insert into Items (Title, Category, Description, Size, `Condition`, IsAvailable, OwnerID, ListedAt, `Type`) values ('Graphic Hoodie', 'hoodie', 'Gray hoodie with retro print on back', 'M', 'Good', true, 11, '2025-02-18 13:40:00', 'swap');
-insert into Items (Title, Category, Description, Size, `Condition`, IsAvailable, OwnerID, ListedAt, `Type`) values ('Running Sneakers', 'shoes', 'White running shoes, lightly used', 'M', 'Good', true, 12, '2025-02-18 18:05:00', 'take');
+insert into Items (Title, Category, Description, Size, `Condition`, IsAvailable, OwnerID, ListedAt, `Type`) values ('Running Sneakers', 'shoes', 'White running shoes, lightly used', 'M', 'Good', false, 12, '2025-02-18 18:05:00', 'take');
 insert into Items (Title, Category, Description, Size, `Condition`, IsAvailable, OwnerID, ListedAt, `Type`) values ('Plaid Flannel Shirt', 'shirt', 'Red and navy flannel, soft fabric', 'M', 'Very good', true, 13, '2025-02-19 09:25:00', 'swap');
-insert into Items (Title, Category, Description, Size, `Condition`, IsAvailable, OwnerID, ListedAt, `Type`) values ('Denim Jacket', 'jacket', 'Classic blue denim jacket, slightly cropped', 'M', 'Excellent', true, 14, '2025-02-19 14:50:00', 'take');
+insert into Items (Title, Category, Description, Size, `Condition`, IsAvailable, OwnerID, ListedAt, `Type`) values ('Denim Jacket', 'jacket', 'Classic blue denim jacket, slightly cropped', 'M', 'Excellent', false, 14, '2025-02-19 14:50:00', 'take');
+insert into Items (Title, Category, Description, Size, `Condition`, IsAvailable, OwnerID, ListedAt, `Type`) values ('Wool Winter Coat', 'coat', 'Navy blue wool winter coat, excellent condition', 'L', 'Excellent', false, 12, '2025-10-25 10:00:00', 'take');
 insert into Items (Title, Category, Description, Size, `Condition`, IsAvailable, OwnerID, ListedAt, `Type`) values ('Silk Blouse', 'blouse', 'Ivory silk button-up, barely worn', 'M', 'Excellent', true, 15, '2025-02-20 11:15:00', 'swap');
-insert into Items (Title, Category, Description, Size, `Condition`, IsAvailable, OwnerID, ListedAt, `Type`) values ('Wide-Leg Trousers', 'pants', 'Black high-waisted wide-leg dress pants', 'M', 'Very good', true, 16, '2025-02-20 17:30:00', 'take');
+insert into Items (Title, Category, Description, Size, `Condition`, IsAvailable, OwnerID, ListedAt, `Type`) values ('Wide-Leg Trousers', 'pants', 'Black high-waisted wide-leg dress pants', 'M', 'Very good', false, 16, '2025-02-20 17:30:00', 'take');
 insert into Items (Title, Category, Description, Size, `Condition`, IsAvailable, OwnerID, ListedAt, `Type`) values ('Striped Long-Sleeve Tee', 't-shirt', 'Navy and white striped tee with boat neck', 'S', 'Good', true, 17, '2025-02-21 10:10:00', 'swap');
 insert into Items (Title, Category, Description, Size, `Condition`, IsAvailable, OwnerID, ListedAt, `Type`) values ('Raincoat', 'coat', 'Yellow waterproof raincoat with hood', 'M', 'Very good', true, 18, '2025-02-21 13:55:00', 'take');
 insert into Items (Title, Category, Description, Size, `Condition`, IsAvailable, OwnerID, ListedAt, `Type`) values ('Black Leggings', 'pants', 'High-rise leggings that are squat-proof', 'M', 'Good', true, 19, '2025-02-22 09:05:00', 'swap');
 insert into Items (Title, Category, Description, Size, `Condition`, IsAvailable, OwnerID, ListedAt, `Type`) values ('Chunky Platform Sandals', 'shoes', 'Black platform sandals, worn twice', 'M', 'Excellent', true, 20, '2025-02-22 15:45:00', 'take');
 insert into Items (Title, Category, Description, Size, `Condition`, IsAvailable, OwnerID, ListedAt, `Type`) values ('Cable Knit Cardigan', 'sweater', 'Olive green button-up cable knit cardigan', 'M', 'Very good', true, 21, '2025-02-23 12:20:00', 'swap');
 insert into Items (Title, Category, Description, Size, `Condition`, IsAvailable, OwnerID, ListedAt, `Type`) values ('Bodycon Party Dress', 'dress', 'Black bodycon dress with square neckline', 'S', 'Good', true, 22, '2025-02-23 18:40:00', 'take');
-insert into Items (Title, Category, Description, Size, `Condition`, IsAvailable, OwnerID, ListedAt, `Type`) values ('Tennis Skirt', 'skirt', 'White pleated tennis skirt, small stain near hem', 'S', 'Fair', false, 23, '2025-02-24 09:35:00', 'swap');
+insert into Items (Title, Category, Description, Size, `Condition`, IsAvailable, OwnerID, ListedAt, `Type`) values ('Tennis Skirt', 'skirt', 'White pleated tennis skirt, small stain near hem', 'S', 'Fair', true, 23, '2025-02-24 09:35:00', 'swap');
 insert into Items (Title, Category, Description, Size, `Condition`, IsAvailable, OwnerID, ListedAt, `Type`) values ('Oversized Blazer', 'blazer', 'Gray checkered blazer with boyfriend fit', 'M', 'Very good', true, 24, '2025-02-24 14:25:00', 'take');
 insert into Items (Title, Category, Description, Size, `Condition`, IsAvailable, OwnerID, ListedAt, `Type`) values ('Fleece Quarter-Zip', 'sweater', 'Navy fleece quarter-zip, super soft', 'L', 'Good', true, 25, '2025-02-25 08:50:00', 'swap');
 insert into Items (Title, Category, Description, Size, `Condition`, IsAvailable, OwnerID, ListedAt, `Type`) values ('Cargo Pants', 'pants', 'Khaki cargo pants with side pockets', 'M', 'Good', true, 26, '2025-02-25 16:05:00', 'take');
-insert into Items (Title, Category, Description, Size, `Condition`, IsAvailable, OwnerID, ListedAt, `Type`) values ('Combat Boots', 'shoes', 'Black lace-up combat boots, broken in but solid', 'M', 'Fair', false, 27, '2025-02-26 11:40:00', 'swap');
-insert into Items (Title, Category, Description, Size, `Condition`, IsAvailable, OwnerID, ListedAt, `Type`) values ('Maxi Skirt', 'skirt', 'Flowy floral maxi skirt with side slit', 'M', 'Very good', true, 28, '2025-02-26 17:15:00', 'take');
+insert into Items (Title, Category, Description, Size, `Condition`, IsAvailable, OwnerID, ListedAt, `Type`) values ('Combat Boots', 'shoes', 'Black lace-up combat boots, broken in but solid', 'M', 'Fair', true, 27, '2025-02-26 11:40:00', 'swap');
+insert into Items (Title, Category, Description, Size, `Condition`, IsAvailable, OwnerID, ListedAt, `Type`) values ('Maxi Skirt', 'skirt', 'Flowy floral maxi skirt with side slit', 'M', 'Very good', false, 28, '2025-02-26 17:15:00', 'take');
 insert into Items (Title, Category, Description, Size, `Condition`, IsAvailable, OwnerID, ListedAt, `Type`) values ('Cropped Tank Top', 'tank top', 'Black ribbed cropped tank top', 'S', 'Excellent', true, 29, '2025-02-27 10:05:00', 'swap');
 insert into Items (Title, Category, Description, Size, `Condition`, IsAvailable, OwnerID, ListedAt, `Type`) values ('Linen Button-Up Shirt', 'shirt', 'Beige linen button-up, relaxed fit', 'L', 'Very good', true, 30, '2025-02-27 15:20:00', 'take');
 insert into Items (Title, Category, Description, Size, `Condition`, IsAvailable, OwnerID, ListedAt, `Type`) values ('Track Jacket', 'jacket', 'Vintage blue track jacket with white stripes', 'M', 'Good', true, 31, '2025-02-28 09:55:00', 'swap');
@@ -450,8 +451,14 @@ insert into Items (Title, Category, Description, Size, `Condition`, IsAvailable,
 insert into Items (Title, Category, Description, Size, `Condition`, IsAvailable, OwnerID, ListedAt, `Type`) values ('Turtleneck Top', 'top', 'Black fitted turtleneck, great for layering', 'S', 'Excellent', true, 37, '2025-03-03 09:25:00', 'swap');
 insert into Items (Title, Category, Description, Size, `Condition`, IsAvailable, OwnerID, ListedAt, `Type`) values ('Oversized Graphic Tee', 't-shirt', 'Washed black tee with festival graphic', 'L', 'Good', true, 38, '2025-03-03 13:50:00', 'take');
 insert into Items (Title, Category, Description, Size, `Condition`, IsAvailable, OwnerID, ListedAt, `Type`) values ('Suede Ankle Boots', 'shoes', 'Tan suede ankle boots, minor crease on toe', 'M', 'Very good', true, 39, '2025-03-04 11:05:00', 'swap');
-insert into Items (Title, Category, Description, Size, `Condition`, IsAvailable, OwnerID, ListedAt, `Type`) values ('Polo Shirt', 'shirt', 'Forest green polo shirt, slightly faded collar', 'M', 'Fair', false, 40, '2025-03-04 17:40:00', 'take');
+insert into Items (Title, Category, Description, Size, `Condition`, IsAvailable, OwnerID, ListedAt, `Type`) values ('Polo Shirt', 'shirt', 'Forest green polo shirt, slightly faded collar', 'M', 'Fair', true, 40, '2025-03-04 17:40:00', 'take');
 insert into Items (Title, Category, Description, Size, `Condition`, IsAvailable, OwnerID, ListedAt, `Type`) values ('Quilted Vest', 'vest', 'Black quilted vest, lightweight layering piece', 'M', 'Good', true, 4, '2025-03-05 10:55:00', 'swap');
+insert into Items (Title, Category, Description, Size, `Condition`, IsAvailable, OwnerID, ListedAt, `Type`) values ('Vintage Denim Jacket', 'jacket', 'Classic blue denim jacket with patches', 'M', 'Very good', true, 6, '2025-12-07 11:15:00', 'take');
+insert into Items (Title, Category, Description, Size, `Condition`, IsAvailable, OwnerID, ListedAt, `Type`) values ('White Sneakers', 'shoes', 'Clean white canvas sneakers, barely worn', 'M', 'Excellent', true, 10, '2025-12-07 08:15:00', 'take');
+insert into Items (Title, Category, Description, Size, `Condition`, IsAvailable, OwnerID, ListedAt, `Type`) values ('Black Midi Dress', 'dress', 'Elegant black midi dress, perfect for events', 'S', 'Excellent', true, 14, '2025-12-07 05:15:00', 'take');
+insert into Items (Title, Category, Description, Size, `Condition`, IsAvailable, OwnerID, ListedAt, `Type`) values ('Cozy Cardigan', 'sweater', 'Soft beige cardigan, great for layering', 'L', 'Very good', true, 16, '2025-12-07 01:15:00', 'take');
+insert into Items (Title, Category, Description, Size, `Condition`, IsAvailable, OwnerID, ListedAt, `Type`) values ('Leather Belt', 'accessories', 'Brown leather belt with silver buckle', 'M', 'Good', true, 18, '2025-12-06 19:15:00', 'take');
+insert into Items (Title, Category, Description, Size, `Condition`, IsAvailable, OwnerID, ListedAt, `Type`) values ('Wool Winter Coat', 'coat', 'Navy blue wool winter coat, excellent condition', 'L', 'Excellent', false, 12, '2025-10-25 10:00:00', 'take');
 SELECT * FROM Items;
 
 -- INSERT REPORTS
@@ -763,6 +770,14 @@ insert into ItemTags (ItemID, TagID) values (40, 7);
 insert into ItemTags (ItemID, TagID) values (40, 14);
 insert into ItemTags (ItemID, TagID) values (40, 21);
 insert into ItemTags (ItemID, TagID) values (40, 28);
+insert into ItemTags (ItemID, TagID) values (41, 10);
+insert into ItemTags (ItemID, TagID) values (41, 24);
+insert into ItemTags (ItemID, TagID) values (42, 11);
+insert into ItemTags (ItemID, TagID) values (42, 15);
+insert into ItemTags (ItemID, TagID) values (43, 15);
+insert into ItemTags (ItemID, TagID) values (43, 28);
+insert into ItemTags (ItemID, TagID) values (44, 15);
+insert into ItemTags (ItemID, TagID) values (44, 22);
 SELECT * FROM ItemTags;
 
 -- INSERT SHIPPINGS
@@ -806,6 +821,8 @@ insert into Shippings (Carrier, TrackingNum, DateShipped, DateArrived) values ('
 insert into Shippings (Carrier, TrackingNum, DateShipped, DateArrived) values ('FedEx', '081517693', '2025-05-04', null);
 insert into Shippings (Carrier, TrackingNum, DateShipped, DateArrived) values ('UPS', '061191848', '2025-07-26', '2025-04-09');
 insert into Shippings (Carrier, TrackingNum, DateShipped, DateArrived) values ('FedEx', '021409567', '2025-05-15', '2024-12-25');
+insert into Shippings (Carrier, TrackingNum, DateShipped, DateArrived) values ('UPS', '1Z999AA10123456784', '2025-12-06', null);
+insert into Shippings (Carrier, TrackingNum, DateShipped, DateArrived) values ('FedEx', '1Z999AA10123456785', '2025-11-01', '2025-11-05');
 SELECT * FROM Shippings;
 
 -- INSERT ORDERS
@@ -849,9 +866,19 @@ insert into Orders (GivenByID, ReceiverID, CreatedAt, ShippingId) values (23, 19
 insert into Orders (GivenByID, ReceiverID, CreatedAt, ShippingId) values (23, 16, '2025-01-04 22:53:58', 37);
 insert into Orders (GivenByID, ReceiverID, CreatedAt, ShippingId) values (3, 37, '2025-09-10 06:51:50', 28);
 insert into Orders (GivenByID, ReceiverID, CreatedAt, ShippingId) values (24, 30, '2025-09-27 08:18:22', null);
+insert into Orders (GivenByID, ReceiverID, CreatedAt, ShippingId) values (10, 3, '2025-04-01 10:30:00', 1);
+insert into Orders (GivenByID, ReceiverID, CreatedAt, ShippingId) values (12, 8, '2025-12-07 14:20:00', null);
+insert into Orders (GivenByID, ReceiverID, CreatedAt, ShippingId) values (15, 8, '2025-12-05 10:00:00', 41);
+insert into Orders (GivenByID, ReceiverID, CreatedAt, ShippingId) values (12, 8, '2025-10-28 09:00:00', 42);
 SELECT * FROM Orders;
 
+-- Add OrderItems for the delivered order (OrderID 40, assuming 39 orders exist)
+insert into OrderItems (OrderID, ItemID) values (40, 10);
+
 -- INSERT ORDER ITEMS
+insert into OrderItems (OrderID, ItemID) values (41, 11);
+insert into OrderItems (OrderID, ItemID) values (42, 14);
+insert into OrderItems (OrderID, ItemID) values (43, 44);
 insert into OrderItems (OrderID, ItemID) values (1, 1);
 insert into OrderItems (OrderID, ItemID) values (2, 2);
 insert into OrderItems (OrderID, ItemID) values (3, 3);

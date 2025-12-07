@@ -16,7 +16,6 @@ class DB:
                 user=os.getenv("DB_USER", "root"),
                 password=os.getenv("DB_PASSWORD", "1234"),
                 database=os.getenv("DB_NAME", "fithub"),
-                auth_plugin='mysql_native_password',
                 autocommit=False
             )
         return self.db

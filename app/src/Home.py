@@ -79,7 +79,7 @@ with col1:
 with col2:
     if st.button("Admin", key="Admin", use_container_width=True):
         st.session_state['authenticated'] = True
-        st.session_state['role'] = 'Admin: Aisha'
+        st.session_state['role'] = 'admin'
         st.session_state['first_name'] = 'Aisha'
         logger.info("Logging in as Admin Persona")
         st.switch_page('pages/00_AdminDash.py')
@@ -93,7 +93,7 @@ with col1:
 with col2:
     if st.button("Data Analyst", key="Data Analyst", use_container_width=True):
         st.session_state['authenticated'] = True
-        st.session_state['role'] = 'Data Analyst: Blair'
+        st.session_state['role'] = 'analyst'
         st.session_state['first_name'] = 'Blair'
         logger.info("Logging in as Data Analyst Persona")
         st.switch_page('pages/00_DADash.py')
@@ -107,7 +107,7 @@ with col1:
 with col2:
     if st.button("Swapper", key="Swapper", use_container_width=True):
         st.session_state['authenticated'] = True
-        st.session_state['role'] = 'Swapper: Andrea'
+        st.session_state['role'] = 'swapper'
         st.session_state['first_name'] = 'Andrea'
         logger.info("Logging in as Swapper Persona")
         st.switch_page('pages/00_SwapperDash.py')
@@ -121,7 +121,8 @@ with col1:
 with col2:
     if st.button("Taker", key="Taker", use_container_width=True):
         st.session_state['authenticated'] = True
-        st.session_state['role'] = 'Taker: Alice'
+        st.session_state['role'] = 'taker'
         st.session_state['first_name'] = 'Alice'
+        st.session_state['user_id'] = 8
         logger.info("Logging in as Taker Persona")
         st.switch_page('pages/00_TakerDash.py')
