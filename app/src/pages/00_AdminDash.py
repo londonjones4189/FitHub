@@ -97,5 +97,5 @@ with col2:
 with col2:
     if st.button("Announcements"):
         logger.info("Navigating to Announcements")
-        st.switch_page("pages/00_Announcements.py")
+        st.switch_page("pages/10_Announcements.py")
 

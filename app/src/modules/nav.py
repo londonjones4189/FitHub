@@ -20,6 +20,8 @@ def AdminUserToolsNav():
     st.sidebar.page_link("pages/10_Admin_User_Tools.py", label="Admin User Tools" )
 def ItemCleanupNav():
     st.sidebar.page_link("pages/10_Item_Cleanup.py", label="Item Cleanup" )
+def Announcements():
+    st.sidebar.page_link("pages/10_Announcements", label="Announcements" )
 def AdminHomeNav():
     st.sidebar.page_link("pages/00_AdminDash.py", label= "Admin Home")
 
