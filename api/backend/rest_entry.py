@@ -58,7 +58,7 @@ def create_app():
     app.register_blueprint(simple_routes)
     app.register_blueprint(ngos, url_prefix="/ngo")
     app.register_blueprint(dataAnalyst, url_prefix="/d")
-    app.register_blueprint(admin, url_prefix="/a")
+    app.register_blueprint(admin, url_prefix="/admin")
     app.register_blueprint(taker, url_prefix="/t")
 
 
