@@ -56,58 +56,9 @@ def get_reports():
     data = cursor.fetchall()
     return success_response("Reports retrieved successfully", data)
 
-# USER STORY 1 — View Pending Reports (Legacy Endpoint)
-# As an Admin, I want to view pending reports in a simple format,
-# so I can quickly see what needs my attention.
-@admin.route('/reports/pending', methods=['GET'])
-def get_pending_reports():
-    """Get all pending (unresolved) reports"""
-    cursor = db.get_db().cursor()
-    cursor.execute("""
-        SELECT ReportID, Severity, Note, ReportedItem, ReportedUser
-        FROM Reports
-        WHERE Resolved = 0
-        ORDER BY ReportID DESC;
-    """)
-    data = cursor.fetchall()
-    return success_response("Reports retrieved successfully", data)
 
 
-
-# USER STORY 1 — Resolve/Unresolve Reports (Unified Endpoint)
-# As an Admin, I want to resolve or unresolve reports,
-# so I can manage the status of reported issues.
-@admin.route('/reports/<int:report_id>', methods=['PUT'])
-def update_report(report_id):
-    """
-    Update a report (resolve/unresolve)
-    Request body: {"resolved": true|false}
-    """
-    data = request.json or {}
-    resolved = data.get('resolved', True)
-    
-    cursor = db.get_db().cursor()
-    
-    if resolved:
-        cursor.execute("""
-            UPDATE Reports
-            SET Resolved = 1, ResolvedAt = NOW()
-            WHERE ReportID = %s;
-        """, (report_id,))
-        message = "Report resolved"
-    else:
-        cursor.execute("""
-            UPDATE Reports
-            SET Resolved = 0, ResolvedAt = NULL
-            WHERE ReportID = %s;
-        """, (report_id,))
-        message = "Report unresolved"
-    
-    db.get_db().commit()
-    return success_response(message)
-
-
-# USER STORY 1 — Resolve Report (Legacy Endpoint)
+# USER STORY 1 — Resolve Report
 # As an Admin, I want to mark a report as resolved,
 # so I can track which issues have been addressed.
 @admin.route('/reports/<int:report_id>/resolve', methods=['PUT'])
@@ -122,21 +73,6 @@ def resolve_report(report_id):
     db.get_db().commit()
     return success_response("Report resolved")
 
-
-# USER STORY 1 — Unresolve Report (Legacy Endpoint)
-# As an Admin, I want to mark a resolved report as unresolved,
-# so I can reopen issues that need further attention.
-@admin.route('/reports/<int:report_id>/unresolve', methods=['PUT'])
-def unresolve_report(report_id):
-    """Unresolve a report (legacy endpoint)"""
-    cursor = db.get_db().cursor()
-    cursor.execute("""
-        UPDATE Reports
-        SET Resolved = 0, ResolvedAt = NULL
-        WHERE ReportID = %s;
-    """, (report_id,))
-    db.get_db().commit()
-    return success_response("Report unresolved")
 
 
 # ============================================================================
@@ -192,45 +128,11 @@ def update_user_status(user_id):
     return success_response(message)
 
 
-# USER STORY 3 — Activate User (Legacy Endpoint)
-# As an Admin, I want to activate user accounts,
-# so I can restore access for users who were previously deactivated.
-@admin.route('/users/<int:user_id>/activate', methods=['PUT'])
-def activate_user(user_id):
-    """Activate a user (legacy endpoint)"""
-    cursor = db.get_db().cursor()
-    cursor.execute("""
-        UPDATE Users
-        SET IsActive = 1
-        WHERE UserID = %s;
-    """, (user_id,))
-    
-    db.get_db().commit()
-    return success_response("User activated")
-
-
-# USER STORY 3 — Deactivate User (Legacy Endpoint)
-# As an Admin, I want to deactivate user accounts,
-# so I can restrict access for problematic or inactive users.
-@admin.route('/users/<int:user_id>/deactivate', methods=['PUT'])
-def deactivate_user(user_id):
-    """Deactivate a user (legacy endpoint)"""
-    cursor = db.get_db().cursor()
-    cursor.execute("""
-        UPDATE Users
-        SET IsActive = 0
-        WHERE UserID = %s;
-    """, (user_id,))
-    
-    db.get_db().commit()
-    return success_response("User deactivated")
-
-
 # ============================================================================
 # ANNOUNCEMENT ROUTES
 # ============================================================================
 
-@admin.route('/announcements', methods=['POST'])
+@admin.route('/create_announcements', methods=['POST'])
 def create_announcement():
     """
     Create a new announcement
@@ -269,25 +171,28 @@ def create_announcement():
     )
 
 
-# ============================================================================
-# ANALYTICS ROUTES
-# ============================================================================
+@admin.route('/announcements', methods=['GET'])
+def get_announcements():
+    """
+    Get all announcements with announcer info
+    """
+    cursor = db.get_db().cursor(dictionary=True)
 
-# USER STORY 5 — Analytics Summary
-# As an Admin, I want to view analytics summary,
-# so I can monitor key platform metrics like total users, listings, and open reports.
-@admin.route('/analytics/summary', methods=['GET'])
-def get_analytics_summary():
-    """Get analytics summary with key metrics"""
-    cursor = db.get_db().cursor()
     cursor.execute("""
-        SELECT
-            (SELECT COUNT(*) FROM Users) AS TotalUsers,
-            (SELECT COUNT(*) FROM Items) AS TotalListings,
-            (SELECT COUNT(*) FROM Reports WHERE Resolved = 0) AS OpenReports;
+        SELECT 
+            a.AnnouncementID,
+            a.Message AS message,
+            a.AnnouncedAt AS announced_at,
+            u.Name AS announcer_name,
+            u.UserID AS announcer_id
+        FROM Announcements a
+        JOIN Users u ON a.AnnouncerID = u.UserID
+        ORDER BY a.AnnouncedAt DESC;
     """)
+
     data = cursor.fetchall()
-    return success_response("Analytics summary retrieved", data)
+
+    return success_response("Announcements retrieved", data)
 
 
 # ============================================================================
