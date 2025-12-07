@@ -15,21 +15,41 @@ def get_up_for_grabs_listings():
     the_query = '''
         SELECT
             i.ItemID, i.Title, i.Category, i.Description, i.Size, i.Condition, u.Name as OwnerName,
-            GROUP_CONCAT(t.Title SEPARATOR ', ') as Tags,
             i.ListedAt
         FROM Items i
         JOIN Users u ON i.OwnerID = u.UserID
-        LEFT JOIN ItemTags it ON i.ItemID = it.ItemID
-        LEFT JOIN Tags t ON it.TagID = t.TagID
-        WHERE i.IsAvailable = 1
-        GROUP BY i.ItemID, i.Title, i.Category, i.Description, i.Size, i.Condition, u.Name, i.ListedAt
+        WHERE i.IsAvailable = 1 AND i.Type = 'take'
         ORDER BY i.ListedAt DESC;
     '''
 
     cursor.execute(the_query)
-    theData = cursor.fetchall()
+    items = cursor.fetchall()
 
-    the_response = make_response(jsonify(theData), 200)
+    item_ids = [item['ItemID'] for item in items]
+    tags_dict = {}
+    
+    if item_ids:
+        placeholders = ', '.join(['%s'] * len(item_ids))
+        tags_query = f'''
+            SELECT it.ItemID, t.Title
+            FROM ItemTags it
+            JOIN Tags t ON it.TagID = t.TagID
+            WHERE it.ItemID IN ({placeholders})
+        '''
+        cursor.execute(tags_query, item_ids)
+        tag_rows = cursor.fetchall()
+        
+        for row in tag_rows:
+            item_id = row['ItemID']
+            if item_id not in tags_dict:
+                tags_dict[item_id] = []
+            tags_dict[item_id].append(row['Title'])
+
+    for item in items:
+        item_id = item['ItemID']
+        item['Tags'] = ', '.join(tags_dict.get(item_id, []))
+
+    the_response = make_response(jsonify(items), 200)
     the_response.mimetype = "application/json"
     return the_response
 #-----User Story 1------
@@ -49,9 +69,8 @@ def get_filter_listings():
     cursor = db.get_db().cursor()
 
     the_query = '''
-        SELECT
+        SELECT DISTINCT
             i.ItemID, i.Title, i.Category, i.Description, i.Size, i.Condition, u.Name as OwnerName,
-            GROUP_CONCAT(t.Title SEPARATOR ', ') as Tags,
             i.ListedAt
         FROM Items i
         JOIN Users u ON i.OwnerID = u.UserID
@@ -79,18 +98,39 @@ def get_filter_listings():
     if tags:
         tag_list = tags.split(',')
         placeholders = ', '.join(['%s'] * len(tag_list))
-        the_query += f' AND t.Title IN ({placeholders})'
+        the_query += f' AND t.Title IN ({placeholders}) OR t.Title IS NULL'
         query_params.extend(tag_list)
 
-    the_query += '''
-        GROUP BY i.ItemID, i.Title, i.Category, i.Description, i.Size, i.Condition, u.Name, i.ListedAt
-        ORDER BY i.ListedAt DESC;
-    '''
+    the_query += ' ORDER BY i.ListedAt DESC;'
 
     cursor.execute(the_query, query_params)
-    theData = cursor.fetchall()
+    items = cursor.fetchall()
 
-    the_response = make_response(jsonify(theData), 200)
+    item_ids = [item['ItemID'] for item in items]
+    tags_dict = {}
+    
+    if item_ids:
+        placeholders = ', '.join(['%s'] * len(item_ids))
+        tags_query = f'''
+            SELECT it.ItemID, t.Title
+            FROM ItemTags it
+            JOIN Tags t ON it.TagID = t.TagID
+            WHERE it.ItemID IN ({placeholders})
+        '''
+        cursor.execute(tags_query, item_ids)
+        tag_rows = cursor.fetchall()
+        
+        for row in tag_rows:
+            item_id = row['ItemID']
+            if item_id not in tags_dict:
+                tags_dict[item_id] = []
+            tags_dict[item_id].append(row['Title'])
+
+    for item in items:
+        item_id = item['ItemID']
+        item['Tags'] = ', '.join(tags_dict.get(item_id, []))
+
+    the_response = make_response(jsonify(items), 200)
     the_response.mimetype = "application/json"
     return the_response
 #-----User Story 2------
@@ -312,7 +352,6 @@ def get_recommendations(taker_id):
         the_query = f'''
             SELECT
                 i.ItemID, i.Title, i.Category, i.Description, i.Size, i.Condition, u.Name as OwnerName, i.ListedAt,
-                GROUP_CONCAT(t.Title SEPARATOR ', ') as Tags,
                 CASE WHEN {category_match} THEN 1 ELSE 0 END as MatchesCategory,
                 CASE WHEN {size_match} THEN 1 ELSE 0 END as MatchesSize,
                 CASE WHEN {style_match} THEN 1 ELSE 0 END as MatchesStyle,
@@ -324,18 +363,39 @@ def get_recommendations(taker_id):
                 END as MatchScore
             FROM Items i
             JOIN Users u ON i.OwnerID = u.UserID
-            LEFT JOIN ItemTags it ON i.ItemID = it.ItemID
-            LEFT JOIN Tags t ON it.TagID = t.TagID
             WHERE i.IsAvailable = 1
               AND i.Type = 'take'
               {exclude_clause}
               AND ({category_match} OR {size_match} OR {style_match})
-            GROUP BY i.ItemID, i.Title, i.Category, i.Description, i.Size, i.Condition, u.Name, i.ListedAt
             ORDER BY MatchScore DESC, i.ListedAt DESC
             LIMIT 3;
         '''
         cursor.execute(the_query)
         items = cursor.fetchall()
+
+        item_ids = [item['ItemID'] for item in items]
+        tags_dict = {}
+        
+        if item_ids:
+            placeholders = ', '.join(['%s'] * len(item_ids))
+            tags_query = f'''
+                SELECT it.ItemID, t.Title
+                FROM ItemTags it
+                JOIN Tags t ON it.TagID = t.TagID
+                WHERE it.ItemID IN ({placeholders})
+            '''
+            cursor.execute(tags_query, item_ids)
+            tag_rows = cursor.fetchall()
+            
+            for row in tag_rows:
+                item_id = row['ItemID']
+                if item_id not in tags_dict:
+                    tags_dict[item_id] = []
+                tags_dict[item_id].append(row['Title'])
+
+        for item in items:
+            item_id = item['ItemID']
+            item['Tags'] = ', '.join(tags_dict.get(item_id, []))
 
         for item in items:
             matches_category = item['MatchesCategory'] == 1
@@ -391,20 +451,42 @@ def get_recommendations(taker_id):
         the_query = '''
             SELECT
                 i.ItemID, i.Title, i.Category, i.Description, i.Size, i.Condition, u.Name as OwnerName, i.ListedAt,
-                GROUP_CONCAT(t.Title SEPARATOR ', ') as Tags,
                 'New user: showing recently listed items' as RecommendationReason
             FROM Items i
             JOIN Users u ON i.OwnerID = u.UserID
-            LEFT JOIN ItemTags it ON i.ItemID = it.ItemID
-            LEFT JOIN Tags t ON it.TagID = t.TagID
             WHERE i.IsAvailable = 1
               AND i.Type = 'take'
-            GROUP BY i.ItemID, i.Title, i.Category, i.Description, i.Size, i.Condition, u.Name, i.ListedAt
             ORDER BY i.ListedAt DESC
             LIMIT 3;
         '''
         cursor.execute(the_query)
-        theData = cursor.fetchall()
+        items = cursor.fetchall()
+
+        item_ids = [item['ItemID'] for item in items]
+        tags_dict = {}
+        
+        if item_ids:
+            placeholders = ', '.join(['%s'] * len(item_ids))
+            tags_query = f'''
+                SELECT it.ItemID, t.Title
+                FROM ItemTags it
+                JOIN Tags t ON it.TagID = t.TagID
+                WHERE it.ItemID IN ({placeholders})
+            '''
+            cursor.execute(tags_query, item_ids)
+            tag_rows = cursor.fetchall()
+            
+            for row in tag_rows:
+                item_id = row['ItemID']
+                if item_id not in tags_dict:
+                    tags_dict[item_id] = []
+                tags_dict[item_id].append(row['Title'])
+
+        for item in items:
+            item_id = item['ItemID']
+            item['Tags'] = ', '.join(tags_dict.get(item_id, []))
+
+        theData = items
 
     the_response = make_response(jsonify(theData), 200)
     the_response.mimetype = "application/json"
@@ -422,27 +504,44 @@ def track_package(user_id):
     the_query = '''
         SELECT
             o.OrderID, i.ItemID, i.Title, i.Category, i.Description, i.Size, i.Condition,
-            o.CreatedAt as RequestDate, s.Carrier, s.TrackingNum, s.DateShipped, s.DateArrived,
-            GROUP_CONCAT(DISTINCT t.Title SEPARATOR ', ') as Tags
+            o.CreatedAt as RequestDate, s.Carrier, s.TrackingNum, s.DateShipped, s.DateArrived
         FROM Orders o
         JOIN OrderItems oi ON o.OrderID = oi.OrderID
         JOIN Items i ON oi.ItemID = i.ItemID
         LEFT JOIN Shippings s ON o.ShippingID = s.ShippingID
-        LEFT JOIN ItemTags it ON i.ItemID = it.ItemID
-        LEFT JOIN Tags t ON it.TagID = t.TagID
         WHERE o.ReceiverID = %s
-        GROUP BY o.OrderID, i.ItemID, i.Title, i.Category, i.Description, i.Size, i.Condition,
-                 o.CreatedAt, s.Carrier, s.TrackingNum, s.DateShipped, s.DateArrived
         ORDER BY o.CreatedAt DESC;
     '''
 
     cursor.execute(the_query, (user_id,))
-    theData = cursor.fetchall()
+    orders = cursor.fetchall()
 
-    if not theData:
-        theData = []
+    if orders:
+        item_ids = [order['ItemID'] for order in orders]
+        tags_dict = {}
+        
+        if item_ids:
+            placeholders = ', '.join(['%s'] * len(item_ids))
+            tags_query = f'''
+                SELECT it.ItemID, t.Title
+                FROM ItemTags it
+                JOIN Tags t ON it.TagID = t.TagID
+                WHERE it.ItemID IN ({placeholders})
+            '''
+            cursor.execute(tags_query, item_ids)
+            tag_rows = cursor.fetchall()
+            
+            for row in tag_rows:
+                item_id = row['ItemID']
+                if item_id not in tags_dict:
+                    tags_dict[item_id] = []
+                tags_dict[item_id].append(row['Title'])
 
-    the_response = make_response(jsonify(theData), 200)
+        for order in orders:
+            item_id = order['ItemID']
+            order['Tags'] = ', '.join(tags_dict.get(item_id, []))
+
+    the_response = make_response(jsonify(orders if orders else []), 200)
     the_response.mimetype = "application/json"
     return the_response
 #-----User Story 6------

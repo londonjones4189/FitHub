@@ -85,10 +85,8 @@ if orders:
                     with st.container(border=True):
                         st.write(f"**{order['Title']}**")
                         st.write(f"Order #{order['OrderID']} | Shipped: {order.get('DateShipped', 'N/A')}")
-                        if order.get('Carrier'):
-                            st.write(f"**Carrier:** {order['Carrier']}")
-                        if order.get('TrackingNum'):
-                            st.write(f"**Tracking:** {order['TrackingNum']}")
+                        if order.get('Carrier') and order.get('TrackingNum'):
+                            st.caption(f"📦 {order['Carrier']} - {order['TrackingNum']}")
                         
                         with st.expander("📋 Item Details", expanded=False):
                             cols = st.columns(2)

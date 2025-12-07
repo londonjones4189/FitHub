@@ -111,7 +111,7 @@ if listings:
                     if is_requested:
                         st.info("✅ Already requested")
                     else:
-                        if st.button(f"Request Item: {item.get('Title', 'Item')}", key=f"request_{item_id}", type="primary"):
+                        if st.button(f"Request Item", key=f"request_{item_id}", type="primary"):
                             response = requests.post(f"{API_BASE}/request_item", json={"item_id": item_id, "user_id": user_id})
                             if response.status_code == 201:
                                 st.toast(f"Requested: {item['Title']}", icon="✅")

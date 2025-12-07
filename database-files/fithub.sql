@@ -770,6 +770,14 @@ insert into ItemTags (ItemID, TagID) values (40, 7);
 insert into ItemTags (ItemID, TagID) values (40, 14);
 insert into ItemTags (ItemID, TagID) values (40, 21);
 insert into ItemTags (ItemID, TagID) values (40, 28);
+insert into ItemTags (ItemID, TagID) values (41, 10);
+insert into ItemTags (ItemID, TagID) values (41, 24);
+insert into ItemTags (ItemID, TagID) values (42, 11);
+insert into ItemTags (ItemID, TagID) values (42, 15);
+insert into ItemTags (ItemID, TagID) values (43, 15);
+insert into ItemTags (ItemID, TagID) values (43, 28);
+insert into ItemTags (ItemID, TagID) values (44, 15);
+insert into ItemTags (ItemID, TagID) values (44, 22);
 SELECT * FROM ItemTags;
 
 -- INSERT SHIPPINGS
