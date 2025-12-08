@@ -5,6 +5,13 @@ import streamlit as st
 from streamlit_extras.app_logo import add_logo
 from modules.nav import SideBarLinks
 
+from modules.deactivated  import require_active_account
+if 'user_id' not in st.session_state:
+    st.session_state['user_id'] = 8
+
+require_active_account()
+
+
 # Page config
 st.set_page_config(layout="wide")
 

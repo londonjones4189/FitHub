@@ -5,9 +5,6 @@ import logging
 from logging.handlers import RotatingFileHandler
 
 from backend.db_connection import db
-from backend.simple.simple_routes import simple_routes
-from backend.ngos.ngo_routes import ngos
-
 from backend.dataAnalysts.dataAnalyst_routes import dataAnalyst
 from backend.admin.admin_routes import admin
 
@@ -41,8 +38,6 @@ def create_app():
     # Register the routes from each Blueprint with the app object
     # and give a url prefix to each
     app.logger.info("create_app(): registering blueprints with Flask app object.")
-    app.register_blueprint(simple_routes)
-    app.register_blueprint(ngos, url_prefix="/ngo")
     app.register_blueprint(dataAnalyst, url_prefix="/d")
     app.register_blueprint(admin, url_prefix="/admin")
     app.register_blueprint(taker, url_prefix="/t")

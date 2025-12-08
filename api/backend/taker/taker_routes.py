@@ -289,7 +289,7 @@ def track_package(user_id):
 
 # ===========================================================================
 # RECOMMENDATIONS ROUTES
-# User stories [2, 4, 5]
+# User stories [6]
 # >[NEW] As a Taker, I want to be able to get recommendations, based on past order history.
 # ===========================================================================
 @taker.route('/recommendations/<int:taker_id>', methods=['GET'])

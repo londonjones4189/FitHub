@@ -324,3 +324,21 @@ def handle_duplicate_items():
             return error_response(str(e), 500)
 
 
+@admin.route('/users/<int:user_id>', methods=['GET'])
+def get_user_by_id(user_id):
+    """
+    Get a specific user by ID
+    """
+    cursor = db.get_db().cursor()
+    cursor.execute("""
+        SELECT UserID, Name, Email, Phone, Gender, Address, DOB, Role, IsActive
+        FROM Users
+        WHERE UserID = %s;
+    """, (user_id,))
+
+    user = cursor.fetchone()
+
+    if user:
+        return success_response("User retrieved successfully", user)
+    else:
+        return error_response(f"User not found", 404)

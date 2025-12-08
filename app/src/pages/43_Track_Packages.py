@@ -13,7 +13,7 @@ API_BASE = "http://api:4000/t"
 
 st.title('📍 Track My Packages')
 
-# For demo, use hardcoded user ID
+
 user_id = st.session_state.get('user_id', 8)
 
 try:
@@ -21,7 +21,7 @@ try:
     packages = response.json()
     
     if packages:
-        # Create tabs for different statuses
+
         tab1, tab2, tab3 = st.tabs(["📦 On The Way", "✅ Delivered", "⏳ Processing"])
         
         with tab1:

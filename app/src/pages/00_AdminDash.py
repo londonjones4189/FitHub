@@ -9,6 +9,7 @@ from modules.nav import SideBarLinks
 
 st.set_page_config(layout="wide")
 SideBarLinks()
+user_id = st.session_state.get('user_id', 1)
 
 st.markdown("""
 <style>
@@ -98,5 +99,3 @@ def AdminUsers():
     st.sidebar.page_link("pages/10_Admin_User_Tools.py", label="User Management", icon="👥")
 def ItemCleanupNav():
     st.sidebar.page_link("pages/10_Item_Cleanup.py", label="Item Cleanup", icon="🧹")
-def Announcements():
-    st.sidebar.page_link("pages/10_Announcements.py", label="Announcements", icon="📢")
