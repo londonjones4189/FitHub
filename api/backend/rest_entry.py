@@ -12,6 +12,7 @@ from backend.dataAnalysts.dataAnalyst_routes import dataAnalyst
 from backend.admin.admin_routes import admin
 
 from backend.taker.taker_routes import taker
+from backend.swapper.swapper_routes import swapper
 
 logging.basicConfig(level=logging.DEBUG)
 
@@ -45,6 +46,7 @@ def create_app():
     app.register_blueprint(dataAnalyst, url_prefix="/d")
     app.register_blueprint(admin, url_prefix="/admin")
     app.register_blueprint(taker, url_prefix="/t")
+    app.register_blueprint(swapper, url_prefix="/s")
 
 
     # Don't forget to return the app object
