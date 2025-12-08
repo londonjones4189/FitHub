@@ -30,13 +30,13 @@ def DataAnalystNav():
     st.sidebar.page_link("pages/00_DADash.py", label = "Data Analyst Home")
 
 def DAListingsNav():
-    st.sidebar.page_link("pages/01_DA_Listings.py", label="Listings & Stock", icon="📦")
+    st.sidebar.page_link("pages/01_DA_Listings.py", label="View Listings & Stock", icon="📦")
 
 def DAShipmentsNav():
-    st.sidebar.page_link("pages/02_DA_Shipments.py", label="Late Shipments", icon="🚨")
+    st.sidebar.page_link("pages/02_DA_Shipments.py", label="Check Late Shipments", icon="🚨")
 
 def DAUserMetricsNav():
-    st.sidebar.page_link("pages/03_DA_UserMetrics.py", label="User Metrics", icon="👥")
+    st.sidebar.page_link("pages/03_DA_UserMetrics.py", label="Analyze User Metrics", icon="👥")
 
 #### ------------------------ Swapper------------------------
 def SwapperNav():
