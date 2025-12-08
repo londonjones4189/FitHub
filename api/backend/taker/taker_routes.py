@@ -8,63 +8,18 @@ from backend.db_connection import db
 
 taker = Blueprint('taker', __name__)
 
-#-----User Story 1------
-# As a Taker, I want to look through listings and take clothing pieces 
-# without having to swap, so I can get second-hand clothes without having to give clothes up.
-
-@taker.route('/listings/up_for_grabs', methods=['GET'])
-def get_up_for_grabs_listings():
-    cursor = db.get_db().cursor()
-
-    the_query = '''
-        SELECT
-            i.ItemID, i.Title, i.Category, i.Description, i.Size, i.Condition, u.Name as OwnerName,
-            i.ListedAt
-        FROM Items i
-        JOIN Users u ON i.OwnerID = u.UserID
-        WHERE i.IsAvailable = 1 AND i.Type = 'take'
-        ORDER BY i.ListedAt DESC;
-    '''
-
-    cursor.execute(the_query)
-    items = cursor.fetchall()
-
-    item_ids = [item['ItemID'] for item in items]
-    tags_dict = {}
-    
-    if item_ids:
-        placeholders = ', '.join(['%s'] * len(item_ids))
-        tags_query = f'''
-            SELECT it.ItemID, t.Title
-            FROM ItemTags it
-            JOIN Tags t ON it.TagID = t.TagID
-            WHERE it.ItemID IN ({placeholders})
-        '''
-        cursor.execute(tags_query, item_ids)
-        tag_rows = cursor.fetchall()
-        
-        for row in tag_rows:
-            item_id = row['ItemID']
-            if item_id not in tags_dict:
-                tags_dict[item_id] = []
-            tags_dict[item_id].append(row['Title'])
-
-    for item in items:
-        item_id = item['ItemID']
-        item['Tags'] = ', '.join(tags_dict.get(item_id, []))
-
-    the_response = make_response(jsonify(items), 200)
-    the_response.mimetype = "application/json"
-    return the_response
-#-----User Story 1------
-
-
-#-----User Story 2------
-# As a Taker, I want to see listing that are labeled as up for grabs 
-# and filter by size, condition, and tags, so I can find items that suit me
-
-@taker.route('/listings/filter', methods=['GET'])
+# ===========================================================================
+# BROWSE FEED ROUTES
+# User stories [1, 2]
+# > As a Taker, I want to see clothes that are listed for take and filter by size, condition,
+#   and style, so I can find items that suit me.
+# > [NEW] As a Taker, I want to be able to select an item for takes.
+# ===========================================================================
+@taker.route('/listings/filter_takes', methods=['GET'])
 def get_filter_listings():
+    """
+    Get listings that meet filter requirements and are takes
+    """
     category = request.args.get('category')
     size = request.args.get('size')
     condition = request.args.get('condition')
@@ -137,39 +92,13 @@ def get_filter_listings():
     the_response = make_response(jsonify(items), 200)
     the_response.mimetype = "application/json"
     return the_response
-#-----User Story 2------
-
-
-#-----User Story 3------
-# As a Taker, I want to request an item by creating an order, 
-# so I can receive the clothing piece I want.
-
-@taker.route('/check_request/<int:user_id>/<int:item_id>', methods=['GET'])
-def check_request(user_id, item_id):
-    cursor = db.get_db().cursor()
-
-    the_query = '''
-        SELECT o.OrderID
-        FROM Orders o
-        JOIN OrderItems oi ON o.OrderID = oi.OrderID
-        WHERE o.ReceiverID = %s
-          AND oi.ItemID = %s
-          AND o.ShippingID IS NULL
-    '''
-    cursor.execute(the_query, (user_id, item_id))
-    result = cursor.fetchone()
-
-    if result:
-        order_id = result['OrderID']
-        the_response = make_response(jsonify({"requested": True, "order_id": order_id}), 200)
-    else:
-        the_response = make_response(jsonify({"requested": False}), 200)
-    
-    the_response.mimetype = "application/json"
-    return the_response
 
 @taker.route('/request_item', methods=['POST'])
 def request_item():
+    """
+    Post Take request, different from posting swap request as
+    it does not need to reincorporated
+    """
     data = request.get_json()
     item_id = data.get('item_id')
     user_id = data.get('user_id')
@@ -216,14 +145,48 @@ def request_item():
     the_response = make_response(jsonify({"message": "Item requested successfully"}), 201)
     the_response.mimetype = "application/json"
     return the_response
-#-----User Story 3------
 
 
-#-----User Story 4------
-# As a Taker, I want to be able to cancel take requests that I changed my mind on.
+
+# ===========================================================================
+# View My Orders
+# User stories [3, 4, 5]
+# > As a Taker, I want to be able to track the status of my incoming package.
+# > [NEW] As a Taker, I want to be able to cancel my taker request.
+# > [NEW] As a Taker, I want to be able to track my take order.
+# ===========================================================================
+@taker.route('/check_request/<int:user_id>/<int:item_id>', methods=['GET'])
+def check_request(user_id, item_id):
+    """
+    Gets status of selected item
+    """
+    cursor = db.get_db().cursor()
+    the_query = '''
+        SELECT o.OrderID
+        FROM Orders o
+        JOIN OrderItems oi ON o.OrderID = oi.OrderID
+        WHERE o.ReceiverID = %s
+          AND oi.ItemID = %s
+          AND o.ShippingID IS NULL
+    '''
+    cursor.execute(the_query, (user_id, item_id))
+    result = cursor.fetchone()
+
+    if result:
+        order_id = result['OrderID']
+        the_response = make_response(jsonify({"requested": True, "order_id": order_id}), 200)
+    else:
+        the_response = make_response(jsonify({"requested": False}), 200)
+    
+    the_response.mimetype = "application/json"
+    return the_response
 
 @taker.route('/orders/<int:order_id>', methods=['DELETE'])
 def cancel_take_request(order_id):
+    """
+    Delete take request for specific take, different from deleting swap
+    request as it can not go two ways
+   """
     user_id = request.args.get('user_id')
 
     cursor = db.get_db().cursor()
@@ -270,16 +233,70 @@ def cancel_take_request(order_id):
     the_response = make_response(jsonify({"message": "Take request canceled successfully."}), 200)
     the_response.mimetype = "application/json"
     return the_response
-#-----User Story 4------
+
+@taker.route('/track_package/<int:user_id>', methods=['GET'])
+def track_package(user_id):
+    """
+    Gets tracking item of selected item
+    """
+    cursor = db.get_db().cursor()
+
+    the_query = '''
+        SELECT
+            o.OrderID, i.ItemID, i.Title, i.Category, i.Description, i.Size, i.Condition,
+            o.CreatedAt as RequestDate, s.Carrier, s.TrackingNum, s.DateShipped, s.DateArrived
+        FROM Orders o
+        JOIN OrderItems oi ON o.OrderID = oi.OrderID
+        JOIN Items i ON oi.ItemID = i.ItemID
+        LEFT JOIN Shippings s ON o.ShippingID = s.ShippingID
+        WHERE o.ReceiverID = %s
+        ORDER BY o.CreatedAt DESC;
+    '''
+
+    cursor.execute(the_query, (user_id,))
+    orders = cursor.fetchall()
+
+    if orders:
+        item_ids = [order['ItemID'] for order in orders]
+        tags_dict = {}
+
+        if item_ids:
+            placeholders = ', '.join(['%s'] * len(item_ids))
+            tags_query = f'''
+                SELECT it.ItemID, t.Title
+                FROM ItemTags it
+                JOIN Tags t ON it.TagID = t.TagID
+                WHERE it.ItemID IN ({placeholders})
+            '''
+            cursor.execute(tags_query, item_ids)
+            tag_rows = cursor.fetchall()
+
+            for row in tag_rows:
+                item_id = row['ItemID']
+                if item_id not in tags_dict:
+                    tags_dict[item_id] = []
+                tags_dict[item_id].append(row['Title'])
+
+        for order in orders:
+            item_id = order['ItemID']
+            order['Tags'] = ', '.join(tags_dict.get(item_id, []))
+
+    the_response = make_response(jsonify(orders if orders else []), 200)
+    the_response.mimetype = "application/json"
+    return the_response
 
 
-#-----User Story 5------
-# As a taker, I want to receive notifications when a new item that matches 
-# my order history styles and sizes is posted as a 'take', 
-# so I can quickly request popular items
 
+# ===========================================================================
+# RECOMMENDATIONS ROUTES
+# User stories [2, 4, 5]
+# >[NEW] As a Taker, I want to be able to get recommendations, based on past order history.
+# ===========================================================================
 @taker.route('/recommendations/<int:taker_id>', methods=['GET'])
 def get_recommendations(taker_id):
+    """
+    Gets recommendation for selected users based on past suer history.
+    """
     cursor = db.get_db().cursor()
 
     check_orders_query = '''
@@ -491,61 +508,7 @@ def get_recommendations(taker_id):
             item['Tags'] = ', '.join(tags_dict.get(item_id, []))
 
         theData = items
-
     the_response = make_response(jsonify(theData), 200)
     the_response.mimetype = "application/json"
     return the_response
-#-----User Story 5------
 
-
-#-----User Story 6------
-# As a taker, I want to be able to track the status of my incoming package
-
-@taker.route('/track_package/<int:user_id>', methods=['GET'])
-def track_package(user_id):
-    cursor = db.get_db().cursor()
-
-    the_query = '''
-        SELECT
-            o.OrderID, i.ItemID, i.Title, i.Category, i.Description, i.Size, i.Condition,
-            o.CreatedAt as RequestDate, s.Carrier, s.TrackingNum, s.DateShipped, s.DateArrived
-        FROM Orders o
-        JOIN OrderItems oi ON o.OrderID = oi.OrderID
-        JOIN Items i ON oi.ItemID = i.ItemID
-        LEFT JOIN Shippings s ON o.ShippingID = s.ShippingID
-        WHERE o.ReceiverID = %s
-        ORDER BY o.CreatedAt DESC;
-    '''
-
-    cursor.execute(the_query, (user_id,))
-    orders = cursor.fetchall()
-
-    if orders:
-        item_ids = [order['ItemID'] for order in orders]
-        tags_dict = {}
-        
-        if item_ids:
-            placeholders = ', '.join(['%s'] * len(item_ids))
-            tags_query = f'''
-                SELECT it.ItemID, t.Title
-                FROM ItemTags it
-                JOIN Tags t ON it.TagID = t.TagID
-                WHERE it.ItemID IN ({placeholders})
-            '''
-            cursor.execute(tags_query, item_ids)
-            tag_rows = cursor.fetchall()
-            
-            for row in tag_rows:
-                item_id = row['ItemID']
-                if item_id not in tags_dict:
-                    tags_dict[item_id] = []
-                tags_dict[item_id].append(row['Title'])
-
-        for order in orders:
-            item_id = order['ItemID']
-            order['Tags'] = ', '.join(tags_dict.get(item_id, []))
-
-    the_response = make_response(jsonify(orders if orders else []), 200)
-    the_response.mimetype = "application/json"
-    return the_response
-#-----User Story 6------
