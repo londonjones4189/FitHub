@@ -83,19 +83,3 @@ with col2:
         logger.info("Navigating to Item Cleanup Tools")
         st.switch_page("pages/10_Item_Cleanup.py")
 
-with col2:
-    if st.button("📢 Announcements"):
-        logger.info("Navigating to Announcements")
-        st.switch_page("pages/10_Announcements.py")
-
-
-
-
-def AdminHomeNav():
-    st.sidebar.page_link("pages/00_AdminDash.py", label= "Admin Home")
-def ReportsManagementNav():
-    st.sidebar.page_link("pages/10_Reports_Management.py", label="Report Management", icon="🚨")
-def AdminUsers():
-    st.sidebar.page_link("pages/10_Admin_User_Tools.py", label="User Management", icon="👥")
-def ItemCleanupNav():
-    st.sidebar.page_link("pages/10_Item_Cleanup.py", label="Item Cleanup", icon="🧹")
