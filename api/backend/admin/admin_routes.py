@@ -1,13 +1,18 @@
+########
+# Admin endpoints
+########
+
 from flask import Blueprint, request, jsonify, make_response
 from backend.db_connection import db
 
 admin = Blueprint('admin', __name__)
 
+# ===========================================================================
 # Helper Functions
 # ============================================================================
 
 def success_response(message, data=None, status_code=200):
-    """Create a standardized success response"""
+    """Creates a standardized success response"""
     response_data = {"message": message}
     if data is not None:
         response_data["data"] = data
@@ -17,17 +22,23 @@ def success_response(message, data=None, status_code=200):
 
 
 def error_response(message, status_code=500):
-    """Create a standardized error response"""
+    """Creates a standardized error response"""
     the_response = make_response(jsonify({"error": message}), status_code)
     the_response.mimetype = 'application/json'
     return the_response
 
 
-
-# REPORT ROUTES
+# ===========================================================================
+# REPORT MANAGEMENT ROUTES
+# User stories [1]
+# > As an admin, I want to review reported listings so that I can remove inappropriate
+#   content quickly.
 # ============================================================================
 @admin.route('/reports', methods=['GET'])
 def get_reports():
+    """
+    Gets all reports
+    """
     status_filter = request.args.get('status', 'all')
 
     cursor = db.get_db().cursor()
@@ -56,6 +67,31 @@ def get_reports():
     data = cursor.fetchall()
     return success_response("Reports retrieved successfully", data)
 
+
+@admin.route('/reports/<int:report_id>/resolve', methods=['PUT'])
+def resolve_report(report_id):
+    """
+    Resolve a report
+    """
+    cursor = db.get_db().cursor()
+    cursor.execute("""
+        UPDATE Reports
+        SET Resolved = 1, ResolvedAt = NOW()
+        WHERE ReportID = %s;
+    """, (report_id,))
+    db.get_db().commit()
+    return success_response("Report resolved")
+
+
+
+# ===========================================================================
+# USER MANAGEMENT ROUTES
+# User stories[2,3]
+# > As an admin, I want to update user roles so that moderators have correct permissions.
+# > As an admin, I want to deactivate inactive or spam users so that the database
+#  stays efficient & reliable.
+# ============================================================================
+
 @admin.route('/users', methods=['GET'])
 def get_users():
     """Get all users"""
@@ -68,30 +104,26 @@ def get_users():
     users = cursor.fetchall()
     return success_response("Users retrieved successfully", users)
 
-# USER STORY 1 — Resolve Report
-# As an Admin, I want to mark a report as resolved,
-# so I can track which issues have been addressed.
-@admin.route('/reports/<int:report_id>/resolve', methods=['PUT'])
-def resolve_report(report_id):
-    """Resolve a report (legacy endpoint)"""
+
+@admin.route('/users/<int:user_id>', methods=['GET'])
+def get_user_by_id(user_id):
+    """
+    Get a specific user by ID
+    """
     cursor = db.get_db().cursor()
     cursor.execute("""
-        UPDATE Reports
-        SET Resolved = 1, ResolvedAt = NOW()
-        WHERE ReportID = %s;
-    """, (report_id,))
-    db.get_db().commit()
-    return success_response("Report resolved")
+        SELECT UserID, Name, Email, Phone, Gender, Address, DOB, Role, IsActive
+        FROM Users
+        WHERE UserID = %s;
+    """, (user_id,))
 
+    user = cursor.fetchone()
 
+    if user:
+        return success_response("User retrieved successfully", user)
+    else:
+        return error_response(f"User not found", 404)
 
-# ============================================================================
-# USER ROUTES
-# ============================================================================
-
-# USER STORY 2 — Update User Role
-# As an Admin, I want to update user roles,
-# so I can manage user permissions and access levels.
 @admin.route('/users/<int:user_id>/role', methods=['PUT'])
 def update_user_role(user_id):
     """
@@ -113,10 +145,6 @@ def update_user_role(user_id):
     db.get_db().commit()
     return success_response("User role updated")
 
-
-# USER STORY 3 — Activate/Deactivate User (Unified Endpoint)
-# As an Admin, I want to activate or deactivate user accounts,
-# so I can control who has access to the platform.
 @admin.route('/users/<int:user_id>/status', methods=['PUT'])
 def update_user_status(user_id):
     """
@@ -139,79 +167,67 @@ def update_user_status(user_id):
 
 
 # ============================================================================
-# ANNOUNCEMENT ROUTES
+# ITEM CLEANUP ROUTES
+# User stories [4, 5]
+# > As an admin, I want to remove or flag duplicate or spam listings so
+#   that the platform remains trustworthy.
+# > [NEW] As an admin, I want to delete a specific item.
 # ============================================================================
 
-@admin.route('/create_announcements', methods=['POST'])
-def create_announcement():
+@admin.route('/items', methods=['GET'])
+def get_listings():
     """
-    Create a new announcement
-    Request body: {"announcer_id": int, "message": string}
+    Gets all items that are available
     """
-    data = request.json
-    if not data:
-        return error_response("Request body is required", 400)
-    
-    announcer = data.get("announcer_id")
-    message = data.get("message")
-    
-    if not announcer or not message:
-        return error_response("announcer_id and message are required", 400)
-    
     cursor = db.get_db().cursor()
-    
-    cursor.execute("""
-        INSERT INTO Announcements (AnnouncerID, Message, AnnouncedAt)
-        VALUES (%s, %s, NOW());
-    """, (announcer, message))
-    
-    announcement_id = cursor.lastrowid
-    
-    cursor.execute("""
-        INSERT INTO AnnouncementsReceived (AnnouncementID, UserID)
-        SELECT %s, UserID FROM Users WHERE IsActive = 1;
-    """, (announcement_id,))
+    the_query = '''
+        SELECT
+            i.ItemID, i.Title, i.Category, i.Description, i.Size, i.Condition, u.Name as OwnerName,
+            i.ListedAt
+        FROM Items i
+        JOIN Users u ON i.OwnerID = u.UserID
+        WHERE i.IsAvailable = 1
+        ORDER BY i.ListedAt DESC;
+    '''
 
-    db.get_db().commit()
-    
-    return success_response(
-        "Announcement created",
-        {"announcement_id": announcement_id},
-        status_code=201
-    )
+    cursor.execute(the_query)
+    items = cursor.fetchall()
 
+    item_ids = [item['ItemID'] for item in items]
+    tags_dict = {}
 
-@admin.route('/announcements', methods=['GET'])
-def get_announcements():
-    """
-    Get all announcements with announcer info
-    """
-    cursor = db.get_db().cursor(dictionary=True)
+    if item_ids:
+        placeholders = ', '.join(['%s'] * len(item_ids))
+        tags_query = f'''
+            SELECT it.ItemID, t.Title
+            FROM ItemTags it
+            JOIN Tags t ON it.TagID = t.TagID
+            WHERE it.ItemID IN ({placeholders})
+        '''
+        cursor.execute(tags_query, item_ids)
+        tag_rows = cursor.fetchall()
 
-    cursor.execute("""
-        SELECT 
-            a.AnnouncementID,
-            a.Message AS message,
-            a.AnnouncedAt AS announced_at,
-            u.Name AS announcer_name,
-            u.UserID AS announcer_id
-        FROM Announcements a
-        JOIN Users u ON a.AnnouncerID = u.UserID
-        ORDER BY a.AnnouncedAt DESC;
-    """)
+        for row in tag_rows:
+            item_id = row['ItemID']
+            if item_id not in tags_dict:
+                tags_dict[item_id] = []
+            tags_dict[item_id].append(row['Title'])
 
-    data = cursor.fetchall()
+    for item in items:
+        item_id = item['ItemID']
+        item['Tags'] = ', '.join(tags_dict.get(item_id, []))
 
-    return success_response("Announcements retrieved", data)
+    the_response = make_response(jsonify(items), 200)
+    the_response.mimetype = "application/json"
+    return the_response
 
 
-# ============================================================================
-# ITEM ROUTES
-# ============================================================================
 
 @admin.route('/items/<int:item_id>', methods=['DELETE'])
 def delete_item(item_id):
-    """Delete a specific item and all related records"""
+    """
+    Delete a specific item and all related records
+    """
     try:
         cursor = db.get_db().cursor()
         
@@ -231,8 +247,10 @@ def delete_item(item_id):
 
 @admin.route('/items/duplicates', methods=['GET', 'DELETE'])
 def handle_duplicate_items():
-    """Get or delete duplicate items (keeps the first occurrence) which will help stop scam sellers"""
-
+    """
+    Get or delete duplicate items (keeps the first occurrence)
+    which will help stop scam sellers trying to sell the same thing twice
+    """
     if request.method == 'GET':
         try:
             cursor = db.get_db().cursor()
@@ -323,53 +341,4 @@ def handle_duplicate_items():
         except Exception as e:
             db.get_db().rollback()
             return error_response(str(e), 500)
-
-
-"""
-Grabs all listings
-"""
-@admin.route('/items', methods=['GET'])
-def get_listings():
-    cursor = db.get_db().cursor()
-
-    the_query = '''
-        SELECT
-            i.ItemID, i.Title, i.Category, i.Description, i.Size, i.Condition, u.Name as OwnerName,
-            i.ListedAt
-        FROM Items i
-        JOIN Users u ON i.OwnerID = u.UserID
-        WHERE i.IsAvailable = 1
-        ORDER BY i.ListedAt DESC;
-    '''
-
-    cursor.execute(the_query)
-    items = cursor.fetchall()
-
-    item_ids = [item['ItemID'] for item in items]
-    tags_dict = {}
-
-    if item_ids:
-        placeholders = ', '.join(['%s'] * len(item_ids))
-        tags_query = f'''
-            SELECT it.ItemID, t.Title
-            FROM ItemTags it
-            JOIN Tags t ON it.TagID = t.TagID
-            WHERE it.ItemID IN ({placeholders})
-        '''
-        cursor.execute(tags_query, item_ids)
-        tag_rows = cursor.fetchall()
-
-        for row in tag_rows:
-            item_id = row['ItemID']
-            if item_id not in tags_dict:
-                tags_dict[item_id] = []
-            tags_dict[item_id].append(row['Title'])
-
-    for item in items:
-        item_id = item['ItemID']
-        item['Tags'] = ', '.join(tags_dict.get(item_id, []))
-
-    the_response = make_response(jsonify(items), 200)
-    the_response.mimetype = "application/json"
-    return the_response
 

@@ -9,7 +9,7 @@ from modules.nav import SideBarLinks
 st.set_page_config(layout="wide")
 SideBarLinks()
 add_logo("assets/FitHublogo.png")
-
+user_id = st.session_state.get('user_id', 1)
 API_BASE = "http://api:4000/admin"
 
 st.markdown("""

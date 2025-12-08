@@ -5,6 +5,12 @@ import streamlit as st
 from streamlit_extras.app_logo import add_logo
 from modules.nav import SideBarLinks
 
+
+from modules.deactivated import require_active_account
+if 'user_id' not in st.session_state:
+    st.session_state['user_id'] = 3
+require_active_account()
+
 # Page config
 st.set_page_config(layout="wide")
 
@@ -80,13 +86,17 @@ st.write("")
 # Main buttons - Feed and My Swaps
 col1, col2 = st.columns([1, 1])
 
+# Main buttons - Feed and My Swaps
+col1, col2 = st.columns([1, 1])
+
 with col1:
     if st.button("👕 Browse Feed", use_container_width=True, type="primary"):
         logger.info("Navigating to Swapper Feed")
+        require_active_account()
         st.switch_page('pages/50_Swapper_Feed.py')
 
 with col2:
     if st.button("🔄 My Swaps", use_container_width=True, type="primary"):
         logger.info("Navigating to My Swaps")
+        require_active_account()
         st.switch_page('pages/52_My_Swaps.py')
-

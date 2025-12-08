@@ -50,9 +50,9 @@ if tags_filter:
     params['tags'] = ','.join(tags_filter)
 
 if params:
-    response = requests.get(f"{API_BASE}/listings/filter", params=params)
+    response = requests.get(f"{API_BASE}/listings/filter_takes", params=params)
 else:
-    response = requests.get(f"{API_BASE}/listings/up_for_grabs")
+    response = requests.get(f"{API_BASE}/listings/filter_takes")
 
 listings = response.json()
 

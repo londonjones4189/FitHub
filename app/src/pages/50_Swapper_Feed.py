@@ -66,10 +66,10 @@ with tab1:
     # Always include user_id to exclude user's own items
     if params:
         params['user_id'] = user_id
-        response = requests.get(f"{API_BASE}/listings/filter", params=params)
+        response = requests.get(f"{API_BASE}/listings/filter_swaps", params=params)
     else:
         # Show all swap items (excluding user's own) when no filters applied
-        response = requests.get(f"{API_BASE}/listings/up_for_swap", params={'user_id': user_id})
+        response = requests.get(f"{API_BASE}/listings/filter_swaps", params={'user_id': user_id})
 
     try:
         if response.status_code == 200:
@@ -81,8 +81,6 @@ with tab1:
         st.error(f"Error parsing response: {e}")
         listings = []
 
-    # Debug: Show response info
-    # st.write(f"Response status: {response.status_code}, Listings count: {len(listings) if isinstance(listings, list) else 'N/A'}")
 
     if listings:
         st.success(f"Found {len(listings)} listings matching your criteria.")

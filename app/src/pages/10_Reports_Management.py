@@ -15,6 +15,7 @@ API_BASE = "http://api:4000/admin"
 
 st.title("🚨 Report Management")
 st.subheader("All Reports")
+user_id = st.session_state.get('user_id', 1)
 
 # Initialize session state
 if 'reports' not in st.session_state:
