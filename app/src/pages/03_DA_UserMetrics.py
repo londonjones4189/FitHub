@@ -14,7 +14,7 @@ API_BASE = "http://api:4000/d"
 st.title("👥 User Metrics & Analytics")
 
 # User Growth by Demographics
-st.subheader("👥 User Growth by Demographics")
+st.subheader("User Growth by Demographics")
 
 with st.container(border=True):
     col1, col2, col3 = st.columns(3)

@@ -9,15 +9,9 @@ from modules.nav import SideBarLinks
 
 st.set_page_config(layout="wide")
 SideBarLinks()
-API_BASE = "http://api:4000/d"
 
-
-st.title(f"Welcome, {st.session_state['first_name']}!")
-
-# CSS Styling
 st.markdown("""
 <style>
-
 
 .block-container {
     padding-top: 2rem;
@@ -25,7 +19,7 @@ st.markdown("""
 }
 
 /* Page title */
-.admin-title {
+.title {
     color: #328E6E;
     font-size: 42px;
     font-weight: bold;
@@ -68,34 +62,41 @@ div.stButton > button:hover {
 
 </style>
 """, unsafe_allow_html=True)
-
-
-# Admin Dashboard UI
-
-
-st.markdown(f'<div class="taker-title">👋 Welcome, {st.session_state.get("first_name", "Taker")}!</div>', unsafe_allow_html=True)
+st.markdown(f'<div class="title">👋 Welcome, {st.session_state.get("first_name", "Admin")}!</div>', unsafe_allow_html=True)
 st.markdown('<div class="section-subtitle">What would you like to do today?</div>', unsafe_allow_html=True)
 st.write("")
-
 
 col1, col2 = st.columns([1, 1])
 
 with col1:
-    if st.button("Manage Reports"):
+    if st.button("🚨 Report Management"):
         st.switch_page("pages/10_Reports_Management.py")
 
 with col1:
-    if st.button("User Roles"):
+    if st.button("👥 User Management"):
         logger.info("Navigating to User Roles page")
         st.switch_page("pages/10_Admin_User_Tools.py")
 
 with col2:
-    if st.button("Item Cleanup Tools"):
+    if st.button("🧹 Item Cleanup"):
         logger.info("Navigating to Item Cleanup Tools")
         st.switch_page("pages/10_Item_Cleanup.py")
 
 with col2:
-    if st.button("Announcements"):
+    if st.button("📢 Announcements"):
         logger.info("Navigating to Announcements")
         st.switch_page("pages/10_Announcements.py")
 
+
+
+
+def AdminHomeNav():
+    st.sidebar.page_link("pages/00_AdminDash.py", label= "Admin Home")
+def ReportsManagementNav():
+    st.sidebar.page_link("pages/10_Reports_Management.py", label="Report Management", icon="🚨")
+def AdminUsers():
+    st.sidebar.page_link("pages/10_Admin_User_Tools.py", label="User Management", icon="👥")
+def ItemCleanupNav():
+    st.sidebar.page_link("pages/10_Item_Cleanup.py", label="Item Cleanup", icon="🧹")
+def Announcements():
+    st.sidebar.page_link("pages/10_Announcements.py", label="Announcements", icon="📢")

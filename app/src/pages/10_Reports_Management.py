@@ -12,9 +12,9 @@ SideBarLinks()
 
 API_BASE = "http://api:4000/admin"
 
-st.markdown('<div class="page-title">📑 Reports Management</div>', unsafe_allow_html=True)
 
-st.subheader("All Reports 🚨")
+st.title("🚨 Report Management")
+st.subheader("All Reports")
 
 # Initialize session state
 if 'reports' not in st.session_state:

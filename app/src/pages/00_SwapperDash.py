@@ -75,13 +75,13 @@ div.stButton > button:hover {
 st.markdown(f'<div class="swapper-title">👋 Welcome, {st.session_state.get("first_name", "Swapper")}!</div>', unsafe_allow_html=True)
 
 st.markdown('<div class="section-subtitle">What would you like to do today?</div>', unsafe_allow_html=True)
-st.write("")  # spacing
+st.write("")
 
 # Main buttons - Feed and My Swaps
 col1, col2 = st.columns([1, 1])
 
 with col1:
-    if st.button("📋 Browse Feed", use_container_width=True, type="primary"):
+    if st.button("👕 Browse Feed", use_container_width=True, type="primary"):
         logger.info("Navigating to Swapper Feed")
         st.switch_page('pages/50_Swapper_Feed.py')
 
@@ -89,3 +89,4 @@ with col2:
     if st.button("🔄 My Swaps", use_container_width=True, type="primary"):
         logger.info("Navigating to My Swaps")
         st.switch_page('pages/52_My_Swaps.py')
+

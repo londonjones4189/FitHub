@@ -16,7 +16,7 @@ st.title("🚨 Late Shipments Alert")
 left_col, right_col = st.columns([2, 1])
 
 with left_col:
-    st.subheader("Delayed Shipments")
+    st.subheader("🗓️ Delayed Shipments")
     
     try:
         get_late_shipments = requests.get(f"{API_BASE}/shipments/delay")

@@ -14,7 +14,7 @@ API_BASE = "http://api:4000/d"
 st.title("📦 Listings & Category Stock")
 
 # All Listings
-st.subheader("📦 All Available Listings")
+st.subheader("All Available Listings")
 try:
     get_listings = requests.get(f"{API_BASE}/listings")
     listings = get_listings.json()
