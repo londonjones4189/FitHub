@@ -27,6 +27,16 @@ def AdminHomeNav():
 
 def DataAnalystNav():
     st.sidebar.page_link("pages/00_DADash.py", label = "Data Analyst Home")
+
+def DAListingsNav():
+    st.sidebar.page_link("pages/01_DA_Listings.py", label="Listings & Stock", icon="📦")
+
+def DAShipmentsNav():
+    st.sidebar.page_link("pages/02_DA_Shipments.py", label="Late Shipments", icon="🚨")
+
+def DAUserMetricsNav():
+    st.sidebar.page_link("pages/03_DA_UserMetrics.py", label="User Metrics", icon="👥")
+    
 # --------------------------------Links Function -----------------------------------------------
 def SideBarLinks(show_home=False):
 
@@ -56,10 +66,13 @@ def SideBarLinks(show_home=False):
             AdminUserToolsNav()
             ItemCleanupNav()
             ReportsManagementNav()
-        #If the user is an data analyst, give them access to the data analyst pages
-        if st.session_state["role"] == "data_analyst":
+        # If the user is a data analyst, give them access to the data analyst pages
+        if st.session_state["role"] == "Data Analyst: Blair":
             DataAnalystNav()
-
+            DAListingsNav()
+            DAShipmentsNav()
+            DAUserMetricsNav()
+    
     # Always show the About page at the bottom of the list of links
     AboutPageNav()
 
