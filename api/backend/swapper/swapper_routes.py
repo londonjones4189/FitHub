@@ -2,71 +2,38 @@
 # Swapper endpoints
 ########
 
-
 from flask import Blueprint, request, jsonify, make_response, current_app
 from backend.db_connection import db
 swapper = Blueprint('swapper', __name__)
 
+#### ------------------------ Swapper------------------------
+def SwapperNav():
+    st.sidebar.page_link("pages/00_SwapperDash.py", label = "Swapper Home")
 
-#-----User Story 1------
-#As a Swapper, I want to filter clothes listed as available for swap and filter by size, condition, style, and tags.
+def SwapperFeed():
+    st.sidebar.page_link("pages/50_Swapper_Feed.py", label = "Browse Feed", icon="👕" )
 
-@swapper.route('/listings/up_for_swap', methods=['GET'])
-def get_up_for_swap_listings():
-    cursor = db.get_db().cursor()
-    user_id = request.args.get('user_id', type=int)
+def SwapperSwaps():
+    st.sidebar.page_link("pages/52_My_Swaps.py", label = "My Swaps", icon="🔄")
 
-    the_query = '''
-        SELECT
-            i.ItemID, i.Title, i.Category, i.Description, i.Size, i.Condition, u.Name as OwnerName,
-            i.ListedAt
-        FROM Items i
-        JOIN Users u ON i.OwnerID = u.UserID
-        WHERE i.IsAvailable = 1 AND i.Type = 'swap'
-    '''
-    
-    query_params = []
-    
-    # Exclude items owned by the current user
-    if user_id:
-        the_query += ' AND i.OwnerID != %s'
-        query_params.append(user_id)
-    
-    the_query += ' ORDER BY i.ListedAt DESC;'
-    
-    cursor.execute(the_query, tuple(query_params))
-    items = cursor.fetchall()
 
-    item_ids = [item['ItemID'] for item in items]
-    tags_dict = {}
-    
-    if item_ids:
-        placeholders = ', '.join(['%s'] * len(item_ids))
-        tags_query = f'''
-            SELECT it.ItemID, t.Title
-            FROM ItemTags it
-            JOIN Tags t ON it.TagID = t.TagID
-            WHERE it.ItemID IN ({placeholders})
-        '''
-        cursor.execute(tags_query, item_ids)
-        tag_rows = cursor.fetchall()
-        
-        for row in tag_rows:
-            item_id = row['ItemID']
-            if item_id not in tags_dict:
-                tags_dict[item_id] = []
-            tags_dict[item_id].append(row['Title'])
 
-    for item in items:
-        item_id = item['ItemID']
-        item['Tags'] = ', '.join(tags_dict.get(item_id, []))
-
-    the_response = make_response(jsonify(items), 200)
-    the_response.mimetype = "application/json"
-    return the_response
-
-@swapper.route('/listings/filter', methods=['GET'])
+# ===========================================================================
+# BROWSE FEED ROUTES
+# User stories [1, 2, 3]
+# > As a Swapper, I want to be able to upload clothing items as listings and list them as
+#   for a swap or a take.
+# > As a Swapper, I want to exchange my clothes I don't want anymore for other user’s clothes by
+#   requesting a listing to swap in exchange for one of my pieces.
+# > As a Swapper, I want to filter clothes that are listed as available for swap and
+#   filter by size, condition, style, and tags so I can find items that suit me.
+# ============================================================================
+@swapper.route('/listings/filter_swaps', methods=['GET'])
 def get_filter_listings():
+    """
+    Gets all listings that meet filter criteria AND sets filtering to
+    be for swaps
+    """
     category = request.args.get('category')
     size = request.args.get('size')
     condition = request.args.get('condition')
@@ -87,7 +54,6 @@ def get_filter_listings():
     '''
 
     query_params = []
-
     # Exclude items owned by the current user
     if user_id:
         the_query += ' AND i.OwnerID != %s'
@@ -146,13 +112,198 @@ def get_filter_listings():
     the_response.mimetype = "application/json"
     return the_response
 
-#-----User Story 1------
+@swapper.route('/upload_listing/', methods=['POST'])
+def upload_listing():
+    """
+    Posts listing for a specific user
+    """
+    try:
+        cursor = db.get_db().cursor()
+        data = request.get_json()
 
-#-----User Story 2------
-#As a Swapper, I want to be able to cancel a swap and have my swapped clothing become available again.
+        title = data['Title']
+        category = data['Category']
+        description = data['Description']
+        size = data['Size']
+        item_type = data['Type']
+        condition = data['Condition']
+        owner_id = data['OwnerID']
+        tags = data.get('Tags', [])  # Get tags, default to empty list
 
+        the_query = '''
+            INSERT INTO Items (Title, Category, Description, Size, `Type`, `Condition`, OwnerID, IsAvailable, ListedAt)
+            VALUES (%s, %s, %s, %s, %s, %s, %s, 1, NOW());
+        '''
+
+        cursor.execute(the_query, (title, category, description, size, item_type, condition, owner_id))
+        item_id = cursor.lastrowid  # Get the ID of the inserted item
+
+        # Handle tags if provided
+        if tags:
+            for tag_title in tags:
+                # Check if tag exists, if not create it
+                check_tag_query = 'SELECT TagID FROM Tags WHERE Title = %s'
+                cursor.execute(check_tag_query, (tag_title,))
+                tag_result = cursor.fetchone()
+
+                if tag_result:
+                    tag_id = tag_result['TagID']
+                else:
+                    # Create new tag
+                    insert_tag_query = 'INSERT INTO Tags (Title) VALUES (%s)'
+                    cursor.execute(insert_tag_query, (tag_title,))
+                    tag_id = cursor.lastrowid
+
+                # Link tag to item
+                insert_item_tag_query = 'INSERT INTO ItemTags (ItemID, TagID) VALUES (%s, %s)'
+                cursor.execute(insert_item_tag_query, (item_id, tag_id))
+
+        db.get_db().commit()
+        the_response = make_response(jsonify({"message": "Listing uploaded successfully."}))
+        the_response.status_code = 200
+        the_response.mimetype = 'application/json'
+        return the_response
+
+    except Exception as e:
+        db.get_db().rollback()
+        the_response = make_response(jsonify({"error": str(e)}))
+        the_response.status_code = 500
+        return the_response
+
+
+@swapper.route('/initiate_swap/', methods=['POST'])
+def initiate_swap():
+    """
+    Posts a swap request after selecting specific listing
+    """
+    try:
+        cursor = db.get_db().cursor()
+        data = request.get_json()
+
+        # Item they want (from another user)
+        desired_item_id = data.get('desired_item_id')
+        # Item they're offering (their own item)
+        offered_item_id = data.get('offered_item_id')
+        requester_id = data.get('requester_id')
+
+        # Validate items exist and are available
+        cursor.execute('''
+            SELECT OwnerID, IsAvailable, Type
+            FROM Items
+            WHERE ItemID = %s
+        ''', (desired_item_id,))
+        desired_item = cursor.fetchone()
+
+        if not desired_item or not desired_item['IsAvailable'] or desired_item['Type'] != 'swap':
+            return make_response(jsonify({"error": "Desired item not available for swap"}), 400)
+
+        owner_id = desired_item['OwnerID']
+
+        if owner_id == requester_id:
+            return make_response(jsonify({"error": "Cannot swap with yourself"}), 400)
+
+        cursor.execute('''
+            SELECT OwnerID, IsAvailable, Type
+            FROM Items
+            WHERE ItemID = %s
+        ''', (offered_item_id,))
+        offered_item = cursor.fetchone()
+
+        if not offered_item or offered_item['OwnerID'] != requester_id or not offered_item['IsAvailable']:
+            return make_response(jsonify({"error": "Offered item not available or not owned by you"}), 400)
+
+        # Create swap order (requester is giving their item, receiving desired item)
+        cursor.execute('''
+            INSERT INTO Orders (GivenByID, ReceiverID, CreatedAt, ShippingID)
+            VALUES (%s, %s, NOW(), NULL)
+        ''', (requester_id, owner_id))
+        order_id = cursor.lastrowid
+
+        # Add both items to the order
+        cursor.execute('''
+            INSERT INTO OrderItems (OrderID, ItemID)
+            VALUES (%s, %s)
+        ''', (order_id, offered_item_id))
+
+        cursor.execute('''
+            INSERT INTO OrderItems (OrderID, ItemID)
+            VALUES (%s, %s)
+        ''', (order_id, desired_item_id))
+
+        # Mark both items as unavailable
+        cursor.execute('''
+            UPDATE Items SET IsAvailable = 0 WHERE ItemID IN (%s, %s)
+        ''', (offered_item_id, desired_item_id))
+
+        db.get_db().commit()
+
+        return make_response(jsonify({
+            "message": "Swap request created successfully",
+            "order_id": order_id
+        }), 201)
+
+    except Exception as e:
+        db.get_db().rollback()
+        return make_response(jsonify({"error": str(e)}), 500)
+
+
+@swapper.route('/my_items/<int:user_id>', methods=['GET'])
+def get_my_items(user_id):
+    cursor = db.get_db().cursor()
+
+    cursor.execute('''
+        SELECT ItemID, Title, Category, Description, Size, `Condition`, IsAvailable, `Type`, ListedAt
+        FROM Items
+        WHERE OwnerID = %s AND `Type` = 'swap'
+        ORDER BY ListedAt DESC
+    ''', (user_id,))
+
+    items = cursor.fetchall()
+
+    # Get tags for all items
+    item_ids = [item['ItemID'] for item in items]
+    tags_dict = {}
+
+    if item_ids:
+        placeholders = ', '.join(['%s'] * len(item_ids))
+        tags_query = f'''
+            SELECT it.ItemID, t.Title
+            FROM ItemTags it
+            JOIN Tags t ON it.TagID = t.TagID
+            WHERE it.ItemID IN ({placeholders})
+        '''
+        cursor.execute(tags_query, item_ids)
+        tag_rows = cursor.fetchall()
+
+        for row in tag_rows:
+            item_id = row['ItemID']
+            if item_id not in tags_dict:
+                tags_dict[item_id] = []
+            tags_dict[item_id].append(row['Title'])
+
+    # Add tags to each item
+    for item in items:
+        item_id = item['ItemID']
+        item['Tags'] = ', '.join(tags_dict.get(item_id, []))
+
+    return make_response(jsonify(items), 200)
+
+
+
+# ===========================================================================
+# MY SWAPS ROUTES
+# User stories [2, 4, 5]
+# > As a Swapper, I want to exchange my clothes I don't want anymore for other user’s clothes by
+#   requesting a listing to swap in exchange for one of my pieces.
+# > As a Swapper, I want to be able to cancel a swap and have my swapped clothing become available
+#   again so that I can find another more suitable swap.
+# > As a Swapper, I want to be able to track the status of my sending and receiving packages of my swap.
+# ============================================================================
 @swapper.route('/cancel_swap/<int:OrderID>/<int:UserID>/', methods=['DELETE'])
 def cancel_swap(OrderID, UserID):
+    """
+    Deletes swap from a specific user
+    """
     try:
         cursor = db.get_db().cursor()
 
@@ -183,8 +334,6 @@ def cancel_swap(OrderID, UserID):
         the_response.status_code = 500
         return the_response
 
-#-----User Story 3------
-# As a Swapper, I want to be able to track the status of my sending and receiving packages of my swap.
 @swapper.route('/track_swap/<int:UserID>/', methods=['GET'])
 def track_swap(UserID):
     cursor = db.get_db().cursor()
@@ -220,184 +369,14 @@ def track_swap(UserID):
     the_response.mimetype = 'application/json'
     return the_response
 
-#-----User Story 4------
-# As a Swapper, I want to be able to upload clothing items as listings and list them as for a swap or a take.
-@swapper.route('/upload_listing/', methods=['POST'])
-def upload_listing():
-    try:
-        cursor = db.get_db().cursor()
-        data = request.get_json()
 
-        title = data['Title']
-        category = data['Category']
-        description = data['Description']
-        size = data['Size']
-        item_type = data['Type']
-        condition = data['Condition']
-        owner_id = data['OwnerID']
-        tags = data.get('Tags', [])  # Get tags, default to empty list
 
-        the_query = '''
-            INSERT INTO Items (Title, Category, Description, Size, `Type`, `Condition`, OwnerID, IsAvailable, ListedAt)
-            VALUES (%s, %s, %s, %s, %s, %s, %s, 1, NOW());
-        '''
-
-        cursor.execute(the_query, (title, category, description, size, item_type, condition, owner_id))
-        item_id = cursor.lastrowid  # Get the ID of the inserted item
-        
-        # Handle tags if provided
-        if tags:
-            for tag_title in tags:
-                # Check if tag exists, if not create it
-                check_tag_query = 'SELECT TagID FROM Tags WHERE Title = %s'
-                cursor.execute(check_tag_query, (tag_title,))
-                tag_result = cursor.fetchone()
-                
-                if tag_result:
-                    tag_id = tag_result['TagID']
-                else:
-                    # Create new tag
-                    insert_tag_query = 'INSERT INTO Tags (Title) VALUES (%s)'
-                    cursor.execute(insert_tag_query, (tag_title,))
-                    tag_id = cursor.lastrowid
-                
-                # Link tag to item
-                insert_item_tag_query = 'INSERT INTO ItemTags (ItemID, TagID) VALUES (%s, %s)'
-                cursor.execute(insert_item_tag_query, (item_id, tag_id))
-        
-        db.get_db().commit()    
-        the_response = make_response(jsonify({"message": "Listing uploaded successfully."}))
-        the_response.status_code = 200
-        the_response.mimetype = 'application/json'
-        return the_response
-
-    except Exception as e:
-        db.get_db().rollback()
-        the_response = make_response(jsonify({"error": str(e)}))
-        the_response.status_code = 500
-        return the_response
-
-#-----User Story 5------
-# As a Swapper, I want to initiate a swap request by selecting one of my items to swap for another item.
-@swapper.route('/initiate_swap/', methods=['POST'])
-def initiate_swap():
-    try:
-        cursor = db.get_db().cursor()
-        data = request.get_json()
-        
-        # Item they want (from another user)
-        desired_item_id = data.get('desired_item_id')
-        # Item they're offering (their own item)
-        offered_item_id = data.get('offered_item_id')
-        requester_id = data.get('requester_id')
-        
-        # Validate items exist and are available
-        cursor.execute('''
-            SELECT OwnerID, IsAvailable, Type
-            FROM Items
-            WHERE ItemID = %s
-        ''', (desired_item_id,))
-        desired_item = cursor.fetchone()
-        
-        if not desired_item or not desired_item['IsAvailable'] or desired_item['Type'] != 'swap':
-            return make_response(jsonify({"error": "Desired item not available for swap"}), 400)
-        
-        owner_id = desired_item['OwnerID']
-        
-        if owner_id == requester_id:
-            return make_response(jsonify({"error": "Cannot swap with yourself"}), 400)
-        
-        cursor.execute('''
-            SELECT OwnerID, IsAvailable, Type
-            FROM Items
-            WHERE ItemID = %s
-        ''', (offered_item_id,))
-        offered_item = cursor.fetchone()
-        
-        if not offered_item or offered_item['OwnerID'] != requester_id or not offered_item['IsAvailable']:
-            return make_response(jsonify({"error": "Offered item not available or not owned by you"}), 400)
-        
-        # Create swap order (requester is giving their item, receiving desired item)
-        cursor.execute('''
-            INSERT INTO Orders (GivenByID, ReceiverID, CreatedAt, ShippingID)
-            VALUES (%s, %s, NOW(), NULL)
-        ''', (requester_id, owner_id))
-        order_id = cursor.lastrowid
-        
-        # Add both items to the order
-        cursor.execute('''
-            INSERT INTO OrderItems (OrderID, ItemID)
-            VALUES (%s, %s)
-        ''', (order_id, offered_item_id))
-        
-        cursor.execute('''
-            INSERT INTO OrderItems (OrderID, ItemID)
-            VALUES (%s, %s)
-        ''', (order_id, desired_item_id))
-        
-        # Mark both items as unavailable
-        cursor.execute('''
-            UPDATE Items SET IsAvailable = 0 WHERE ItemID IN (%s, %s)
-        ''', (offered_item_id, desired_item_id))
-        
-        db.get_db().commit()
-        
-        return make_response(jsonify({
-            "message": "Swap request created successfully",
-            "order_id": order_id
-        }), 201)
-        
-    except Exception as e:
-        db.get_db().rollback()
-        return make_response(jsonify({"error": str(e)}), 500)
-
-# Get user's items available for swap
-@swapper.route('/my_items/<int:user_id>', methods=['GET'])
-def get_my_items(user_id):
-    cursor = db.get_db().cursor()
-    
-    cursor.execute('''
-        SELECT ItemID, Title, Category, Description, Size, `Condition`, IsAvailable, `Type`, ListedAt
-        FROM Items
-        WHERE OwnerID = %s AND `Type` = 'swap'
-        ORDER BY ListedAt DESC
-    ''', (user_id,))
-    
-    items = cursor.fetchall()
-    
-    # Get tags for all items
-    item_ids = [item['ItemID'] for item in items]
-    tags_dict = {}
-    
-    if item_ids:
-        placeholders = ', '.join(['%s'] * len(item_ids))
-        tags_query = f'''
-            SELECT it.ItemID, t.Title
-            FROM ItemTags it
-            JOIN Tags t ON it.TagID = t.TagID
-            WHERE it.ItemID IN ({placeholders})
-        '''
-        cursor.execute(tags_query, item_ids)
-        tag_rows = cursor.fetchall()
-        
-        for row in tag_rows:
-            item_id = row['ItemID']
-            if item_id not in tags_dict:
-                tags_dict[item_id] = []
-            tags_dict[item_id].append(row['Title'])
-    
-    # Add tags to each item
-    for item in items:
-        item_id = item['ItemID']
-        item['Tags'] = ', '.join(tags_dict.get(item_id, []))
-    
-    return make_response(jsonify(items), 200)
-
-# Get ongoing trades for a user
 @swapper.route('/trades/ongoing/<int:user_id>', methods=['GET'])
 def get_ongoing_trades(user_id):
+    """
+    Gets ongoing trades for user
+    """
     cursor = db.get_db().cursor()
-    
     # Get trades where user is either giving or receiving
     cursor.execute('''
         SELECT 
@@ -456,6 +435,9 @@ def get_ongoing_trades(user_id):
 # Get completed trades for a user
 @swapper.route('/trades/completed/<int:user_id>', methods=['GET'])
 def get_completed_trades(user_id):
+    """
+    Gets completed trades
+    """
     cursor = db.get_db().cursor()
     
     cursor.execute('''
@@ -501,9 +483,12 @@ def get_completed_trades(user_id):
     
     return make_response(jsonify(trades), 200)
 
-# Accept a swap request
+
 @swapper.route('/trades/<int:trade_id>/accept', methods=['PUT'])
 def accept_trade(trade_id):
+    """
+    Allows user to accept a swap request
+    """
     try:
         cursor = db.get_db().cursor()
         user_id = request.args.get('user_id', type=int)
@@ -536,9 +521,12 @@ def accept_trade(trade_id):
         db.get_db().rollback()
         return make_response(jsonify({"error": str(e)}), 500)
 
-# Reject a swap request
+
 @swapper.route('/trades/<int:trade_id>/reject', methods=['PUT'])
 def reject_trade(trade_id):
+    """
+    Allows user to reject a trade
+    """
     try:
         cursor = db.get_db().cursor()
         user_id = request.args.get('user_id', type=int)
@@ -574,9 +562,12 @@ def reject_trade(trade_id):
         db.get_db().rollback()
         return make_response(jsonify({"error": str(e)}), 500)
 
-# Cancel a swap (by the initiator)
+
 @swapper.route('/trades/<int:trade_id>/cancel', methods=['PUT'])
 def cancel_trade(trade_id):
+    """
+    Allows initiator user to cancel a trade
+    """
     try:
         cursor = db.get_db().cursor()
         user_id = request.args.get('user_id', type=int)
@@ -612,7 +603,9 @@ def cancel_trade(trade_id):
         db.get_db().rollback()
         return make_response(jsonify({"error": str(e)}), 500)
 
-# Utility endpoint to set a user's role to swapper
+# ===========================================================================
+# UTILITY ROUTES
+# ============================================================================
 @swapper.route('/set_user_role/<int:user_id>', methods=['PUT'])
 def set_user_role(user_id):
     """
