@@ -16,18 +16,42 @@ Samuel Yao
 
 FitHub is a digital clothing exchange platform designed to help people refresh their wardrobes sustainably. Instead of buying new clothes or engaging in bidding wars on platforms like Depop or Ebay, FitHub allows users to swap, take, or donate items based on personalized style and profiles. FitHub’s Flask REST API and Streamlit UI work together to support finding your dream wardrobe through analytical recommendations.
 
-The platform serves two main user groups:
+This program features:
+   1. Smart Listings - Tagged items as "swap" or "take"
+   2. Personalized Recommendations - User's style matching recommendations
+   3. Order Tracking - Real-time package tracking
+   4. Analytics Dashboard - For data-driven actions
+   5. Admin Moderation - Content management and user tools
 
-Swappers
+## User Roles
 
-Users who want to exchange clothing items they no longer use. They can post items, tag them as “swap” or “take,” and accept or reject match suggestions based on their preferences.
+Fithub Supports four distinct user personas:
 
-Takers / Donators
+1. Admin (Aisha)
+   Manages reported content and users
+   Deactivates spam accounts
+   Sends system accouncements
+   Monitor platform health
 
-Users who want to take items for free or find places to donate clothing. These users can browse items without bidding or fees.
+2. Data Analyst (Blair)
+   Can view listings and category stock
+   Tracks late shipments
+   Analyzes user demographics and engagement
+   Generates platform metrics
 
-FitHub supports smart listings, personalized match suggestions, swap/task progression, user communication, and admin moderation tools.
+3. Swapper (Andrea)
+   Posts clothing items for swap or take
+   Browse and filters available items
+   Requests swaps with other users
+   Tracks incoming and outgoing packages
+   Cancels pending swaps
 
+4. Taker (Alice)
+   Browse free items ("takes")
+   Filter by size, condition, or tags
+   Get personalized recommendations
+   Track incoming packages
+   Cancel unfufilled requests
 
 ## Structure of the Repo
 
