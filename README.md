@@ -5,7 +5,7 @@ Group Members:
 
 Micah Cheng
 
-Will Cramer
+William Cramer
 
 London Jones 
 
