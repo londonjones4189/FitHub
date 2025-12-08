@@ -16,7 +16,7 @@ def AboutPageNav():
 def AdminHomeNav():
     st.sidebar.page_link("pages/00_AdminDash.py", label= "Admin Home")
 def ReportsManagementNav():
-    st.sidebar.page_link("pages/10_Reports_Management.py", label="Reports Management", icon="🚨")
+    st.sidebar.page_link("pages/10_Reports_Management.py", label="Report Management", icon="🚨")
 def AdminUsers():
     st.sidebar.page_link("pages/10_Admin_User_Tools.py", label="User Management", icon="👥")
 def ItemCleanupNav():
