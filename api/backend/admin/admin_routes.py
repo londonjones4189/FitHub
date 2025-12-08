@@ -219,32 +219,147 @@ def delete_item(item_id):
         return error_response(str(e), 500)
 
 
-@admin.route('/items/duplicates', methods=['DELETE'])
-def delete_duplicate_items():
-    """Delete duplicate items (keeps the first occurrence)"""
-    try:
-        cursor = db.get_db().cursor()
-        cursor.execute("""
-            DELETE i FROM Items i
-            JOIN (
-                SELECT Title, OwnerID, MIN(ItemID) AS KeepID
-                FROM Items
-                GROUP BY Title, OwnerID
-                HAVING COUNT(*) > 1
-            ) base
-            ON i.Title = base.Title
-            AND i.OwnerID = base.OwnerID
-            AND i.ItemID != base.KeepID;
-        """)
-        
-        rows_deleted = cursor.rowcount
-        db.get_db().commit()
-        
-        return success_response(
-            f"Removed {rows_deleted} duplicate item(s)",
-            {"deleted_count": rows_deleted}
-        )
-    
-    except Exception as e:
-        db.get_db().rollback()
-        return error_response(str(e), 500)
+@admin.route('/items/duplicates', methods=['GET', 'DELETE'])
+def handle_duplicate_items():
+    """Get or delete duplicate items (keeps the first occurrence) which will help stop scam sellers"""
+
+    if request.method == 'GET':
+        try:
+            cursor = db.get_db().cursor()
+            cursor.execute("""
+                SELECT 
+                    i.*,
+                    duplicate_counts.DuplicateCount
+                FROM Items i
+                JOIN (
+                    SELECT 
+                        Title, 
+                        Category, 
+                        Size, 
+                        `Condition`, 
+                        `Type`, 
+                        OwnerID,
+                        COUNT(*) AS DuplicateCount,
+                        MIN(ItemID) AS KeepID
+                    FROM Items
+                    GROUP BY 
+                        Title, 
+                        Category, 
+                        Size, 
+                        `Condition`, 
+                        `Type`, 
+                        OwnerID
+                    HAVING COUNT(*) > 1
+                ) duplicate_counts
+                ON  i.Title = duplicate_counts.Title
+                AND i.Category = duplicate_counts.Category
+                AND i.Size = duplicate_counts.Size
+                AND i.`Condition` = duplicate_counts.`Condition`
+                AND i.`Type` = duplicate_counts.`Type`
+                AND i.OwnerID = duplicate_counts.OwnerID
+                ORDER BY i.Title, i.ItemID;
+            """)
+
+            duplicates = cursor.fetchall()
+            return success_response(
+                "Duplicate items retrieved",
+                duplicates
+            )
+
+        except Exception as e:
+            return error_response(str(e), 500)
+
+    elif request.method == 'DELETE':
+        try:
+            cursor = db.get_db().cursor()
+            cursor.execute("""
+                DELETE i FROM Items i
+                JOIN (
+                    SELECT 
+                        Title, 
+                        Category, 
+                        Size, 
+                        `Condition`, 
+                        `Type`, 
+                        OwnerID,
+                        MIN(ItemID) AS KeepID
+                    FROM Items
+                    GROUP BY 
+                        Title, 
+                        Category, 
+                        Size, 
+                        `Condition`, 
+                        `Type`, 
+                        OwnerID
+                    HAVING COUNT(*) > 1
+                ) base
+                ON  i.Title = base.Title
+                AND i.Category = base.Category
+                AND i.Size = base.Size
+                AND i.`Condition` = base.`Condition`
+                AND i.`Type` = base.`Type`
+                AND i.OwnerID = base.OwnerID
+                AND i.ItemID != base.KeepID;
+            """)
+
+            rows_deleted = cursor.rowcount
+            db.get_db().commit()
+
+            return success_response(
+                f"Removed {rows_deleted} duplicate item(s)",
+                {"deleted_count": rows_deleted}
+            )
+
+        except Exception as e:
+            db.get_db().rollback()
+            return error_response(str(e), 500)
+
+
+"""
+Grabs all listings
+"""
+@admin.route('/items', methods=['GET'])
+def get_listings():
+    cursor = db.get_db().cursor()
+
+    the_query = '''
+        SELECT
+            i.ItemID, i.Title, i.Category, i.Description, i.Size, i.Condition, u.Name as OwnerName,
+            i.ListedAt
+        FROM Items i
+        JOIN Users u ON i.OwnerID = u.UserID
+        WHERE i.IsAvailable = 1
+        ORDER BY i.ListedAt DESC;
+    '''
+
+    cursor.execute(the_query)
+    items = cursor.fetchall()
+
+    item_ids = [item['ItemID'] for item in items]
+    tags_dict = {}
+
+    if item_ids:
+        placeholders = ', '.join(['%s'] * len(item_ids))
+        tags_query = f'''
+            SELECT it.ItemID, t.Title
+            FROM ItemTags it
+            JOIN Tags t ON it.TagID = t.TagID
+            WHERE it.ItemID IN ({placeholders})
+        '''
+        cursor.execute(tags_query, item_ids)
+        tag_rows = cursor.fetchall()
+
+        for row in tag_rows:
+            item_id = row['ItemID']
+            if item_id not in tags_dict:
+                tags_dict[item_id] = []
+            tags_dict[item_id].append(row['Title'])
+
+    for item in items:
+        item_id = item['ItemID']
+        item['Tags'] = ', '.join(tags_dict.get(item_id, []))
+
+    the_response = make_response(jsonify(items), 200)
+    the_response.mimetype = "application/json"
+    return the_response
+
