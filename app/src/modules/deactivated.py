@@ -10,7 +10,7 @@ def check_if_active(user_id):
     Check if a user's account is active
     """
     try:
-        response = requests.get(f'http://api:4000/admin/users/{user_id}', timeout=5)
+        response = requests.get(f'http://api:4000/admin/users/{user_id}', timeout=10)
 
         if response.status_code == 200:
             user_data = response.json()

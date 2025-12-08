@@ -20,13 +20,12 @@ def SwapperSwaps():
 
 # ===========================================================================
 # BROWSE FEED ROUTES
-# User stories [1, 2, 3]
+# User stories [1, 2, 3, 4]
+# > As a Swapper, I want to be able to view items listed for swaps and filter them.
 # > As a Swapper, I want to be able to upload clothing items as listings and list them as
 #   for a swap or a take.
 # > As a Swapper, I want to exchange my clothes I don't want anymore for other user’s clothes by
 #   requesting a listing to swap in exchange for one of my pieces.
-# > As a Swapper, I want to filter clothes that are listed as available for swap and
-#   filter by size, condition, style, and tags so I can find items that suit me.
 # ============================================================================
 @swapper.route('/listings/filter_swaps', methods=['GET'])
 def get_filter_listings():

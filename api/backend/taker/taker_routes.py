@@ -150,10 +150,9 @@ def request_item():
 
 # ===========================================================================
 # View My Orders
-# User stories [3, 4, 5]
+# User stories [3, 4]
 # > As a Taker, I want to be able to track the status of my incoming package.
 # > [NEW] As a Taker, I want to be able to cancel my taker request.
-# > [NEW] As a Taker, I want to be able to track my take order.
 # ===========================================================================
 @taker.route('/check_request/<int:user_id>/<int:item_id>', methods=['GET'])
 def check_request(user_id, item_id):
@@ -237,7 +236,7 @@ def cancel_take_request(order_id):
 @taker.route('/track_package/<int:user_id>', methods=['GET'])
 def track_package(user_id):
     """
-    Gets tracking item of selected item
+    Gets tracking status of a selected item
     """
     cursor = db.get_db().cursor()
 

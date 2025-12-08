@@ -104,12 +104,14 @@ col1, col2 = st.columns([1, 1])
 with col1:
     if st.button("👕 Browse Feed", use_container_width=True, type="primary"):
         logger.info("Navigating to Browse Listings")
-        st.switch_page('pages/40_Browse_Listings.py')
+        require_active_account()
+    st.switch_page('pages/40_Browse_Listings.py')
 
 with col2:
     if st.button("📦 View My Orders", use_container_width=True, type="primary"):
         logger.info("Navigating to My Orders")
-        st.switch_page('pages/41_My_Orders.py')
+        require_active_account()
+    st.switch_page('pages/41_My_Orders.py')
 
 
 # Recommendations - right-aligned under View Orders, same width and height
@@ -135,5 +137,6 @@ with col2:
     """, unsafe_allow_html=True)
     if st.button("✨ Recommendations", use_container_width=True):
         logger.info("Navigating to Recommendations")
-        st.switch_page('pages/42_Recommendations.py')
+        require_active_account()
+    st.switch_page('pages/42_Recommendations.py')
 

@@ -85,7 +85,7 @@ def resolve_report(report_id):
 
 
 # ===========================================================================
-# REPORT MANAGEMENT ROUTES
+# USER MANAGEMENT ROUTES
 # User stories[2,3]
 # > As an admin, I want to update user roles so that moderators have correct permissions.
 # > As an admin, I want to deactivate inactive or spam users so that the database
@@ -104,6 +104,25 @@ def get_users():
     users = cursor.fetchall()
     return success_response("Users retrieved successfully", users)
 
+
+@admin.route('/users/<int:user_id>', methods=['GET'])
+def get_user_by_id(user_id):
+    """
+    Get a specific user by ID
+    """
+    cursor = db.get_db().cursor()
+    cursor.execute("""
+        SELECT UserID, Name, Email, Phone, Gender, Address, DOB, Role, IsActive
+        FROM Users
+        WHERE UserID = %s;
+    """, (user_id,))
+
+    user = cursor.fetchone()
+
+    if user:
+        return success_response("User retrieved successfully", user)
+    else:
+        return error_response(f"User not found", 404)
 
 @admin.route('/users/<int:user_id>/role', methods=['PUT'])
 def update_user_role(user_id):
@@ -323,22 +342,3 @@ def handle_duplicate_items():
             db.get_db().rollback()
             return error_response(str(e), 500)
 
-
-@admin.route('/users/<int:user_id>', methods=['GET'])
-def get_user_by_id(user_id):
-    """
-    Get a specific user by ID
-    """
-    cursor = db.get_db().cursor()
-    cursor.execute("""
-        SELECT UserID, Name, Email, Phone, Gender, Address, DOB, Role, IsActive
-        FROM Users
-        WHERE UserID = %s;
-    """, (user_id,))
-
-    user = cursor.fetchone()
-
-    if user:
-        return success_response("User retrieved successfully", user)
-    else:
-        return error_response(f"User not found", 404)
