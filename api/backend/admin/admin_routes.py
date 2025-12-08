@@ -56,7 +56,17 @@ def get_reports():
     data = cursor.fetchall()
     return success_response("Reports retrieved successfully", data)
 
-
+@admin.route('/users', methods=['GET'])
+def get_users():
+    """Get all users"""
+    cursor = db.get_db().cursor()
+    cursor.execute("""
+        SELECT UserID, Name, Email, Phone, Gender, Address, DOB, Role, IsActive
+        FROM Users
+        ORDER BY UserID;
+    """)
+    users = cursor.fetchall()
+    return success_response("Users retrieved successfully", users)
 
 # USER STORY 1 — Resolve Report
 # As an Admin, I want to mark a report as resolved,
