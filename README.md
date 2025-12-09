@@ -39,14 +39,14 @@ Fithub Supports four distinct user personas:
    Analyzes user demographics and engagement
    Generates platform metrics
 
-3. Swapper (Andrea)
+3. Swapper (Waylen)
    Posts clothing items for swap or take
    Browse and filters available items
    Requests swaps with other users
    Tracks incoming and outgoing packages
    Cancels pending swaps
 
-4. Taker (Alice)
+4. Taker (Alexi)
    Browse free items ("takes")
    Filter by size, condition, or tags
    Get personalized recommendations
