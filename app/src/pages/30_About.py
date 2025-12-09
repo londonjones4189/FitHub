@@ -12,7 +12,7 @@ st.markdown(
     affordably through our easy barter system. List pieces to swap or offer up for take,
      and get smart recommendations based on your history. Filter by your preferences, 
      discover new looks, and upgrade your wardrobe like never before. Join the community and 
-     start styling smarter.Part 3: User Personas
+     start styling smarter.
     """
 )
 

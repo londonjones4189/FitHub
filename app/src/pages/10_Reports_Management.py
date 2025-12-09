@@ -65,8 +65,7 @@ if st.session_state.reports is not None:
                         if st.button(f"Mark as Resolved", key=f"resolve_{report_id}", type="primary"):
                             try:
                                 resp = requests.put(
-                                    f"{API_BASE}/reports/{report_id}",
-                                    json={"resolved": True}
+                                    f"{API_BASE}/reports/{report_id}/resolve"
                                 )
                                 if resp.status_code == 200:
                                     # Refetch reports with current filter instead of updating in place

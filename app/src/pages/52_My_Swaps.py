@@ -17,7 +17,7 @@ logger.info(f"My Swaps loaded by {st.session_state.get('first_name', 'Unknown')}
 API_BASE = "http://api:4000/s"
 
 st.title('🔄 My Swaps & Tracking')
-user_id = st.session_state.get('user_id', 3)
+user_id = st.session_state.get('user_id', 5)
 
 # Get swap tracking data
 response = requests.get(f"{API_BASE}/track_swap/{user_id}")
@@ -33,7 +33,7 @@ if swaps:
     left_col, right_col = st.columns([2, 1])
     
     with right_col:
-        st.subheader("📊 Summary")
+        st.subheader("Summary")
         with st.container(border=True):
             total_swaps = len(swaps)
             delivered = len([s for s in swaps if s.get('Status') == 'Delivered'])
@@ -60,14 +60,41 @@ if swaps:
                         st.write(f"**Swap #{swap['OrderID']}** - {direction}")
                         st.write(f"Created: {swap.get('CreatedAt', 'N/A')}")
                         
-                        # Show both sides of the swap
-                        col1, col2 = st.columns(2)
-                        with col1:
-                            st.write("**Your Item**")
-                            st.info("📦 Preparing to ship...")
-                        with col2:
-                            st.write("**Their Item**")
-                            st.info("📦 Waiting for acceptance...")
+                        # Combined details dropdown
+                        your_item = swap.get('YourItem')
+                        their_item = swap.get('TheirItem')
+                        with st.expander("📋 Item Details", expanded=False):
+                            detail_col1, detail_col2 = st.columns(2)
+                            
+                            with detail_col1:
+                                st.write("**Your Item**")
+                                if your_item:
+                                    if your_item.get('Category'):
+                                        st.write(f"**Category:** {your_item['Category']}")
+                                    if your_item.get('Size'):
+                                        st.write(f"**Size:** {your_item['Size']}")
+                                    if your_item.get('Condition'):
+                                        st.write(f"**Condition:** {your_item['Condition']}")
+                                    if your_item.get('Description'):
+                                        st.write(f"**Description:** {your_item['Description']}")
+                                    if your_item.get('Tags'):
+                                        st.write(f"**Tags:** {your_item['Tags']}")
+                            
+                            with detail_col2:
+                                st.write("**Their Item**")
+                                if their_item:
+                                    if their_item.get('Category'):
+                                        st.write(f"**Category:** {their_item['Category']}")
+                                    if their_item.get('Size'):
+                                        st.write(f"**Size:** {their_item['Size']}")
+                                    if their_item.get('Condition'):
+                                        st.write(f"**Condition:** {their_item['Condition']}")
+                                    if their_item.get('Description'):
+                                        st.write(f"**Description:** {their_item['Description']}")
+                                    if their_item.get('Tags'):
+                                        st.write(f"**Tags:** {their_item['Tags']}")
+                        
+                        st.warning("Preparing to ship...")
                         
                         if direction == 'Sending':
                             if st.button("Cancel Swap", key=f"cancel_{swap['OrderID']}", type="secondary"):
@@ -89,27 +116,46 @@ if swaps:
                     with st.container(border=True):
                         direction = swap.get('SwapDirection', 'Unknown')
                         st.write(f"**Swap #{swap['OrderID']}** - {direction}")
+                        st.write(f"Shipped: {swap.get('DateShipped', 'N/A')}")
                         
                         if swap.get('Carrier') and swap.get('TrackingNum'):
                             st.caption(f"📦 {swap['Carrier']} - {swap['TrackingNum']}")
                         
-                        if swap.get('DateShipped'):
-                            st.write(f"Shipped: {swap['DateShipped']}")
+                        # Combined details dropdown
+                        your_item = swap.get('YourItem')
+                        their_item = swap.get('TheirItem')
+                        with st.expander("📋 Item Details", expanded=False):
+                            detail_col1, detail_col2 = st.columns(2)
+                            
+                            with detail_col1:
+                                st.write("**Your Item**")
+                                if your_item:
+                                    if your_item.get('Category'):
+                                        st.write(f"**Category:** {your_item['Category']}")
+                                    if your_item.get('Size'):
+                                        st.write(f"**Size:** {your_item['Size']}")
+                                    if your_item.get('Condition'):
+                                        st.write(f"**Condition:** {your_item['Condition']}")
+                                    if your_item.get('Description'):
+                                        st.write(f"**Description:** {your_item['Description']}")
+                                    if your_item.get('Tags'):
+                                        st.write(f"**Tags:** {your_item['Tags']}")
+                            
+                            with detail_col2:
+                                st.write("**Their Item**")
+                                if their_item:
+                                    if their_item.get('Category'):
+                                        st.write(f"**Category:** {their_item['Category']}")
+                                    if their_item.get('Size'):
+                                        st.write(f"**Size:** {their_item['Size']}")
+                                    if their_item.get('Condition'):
+                                        st.write(f"**Condition:** {their_item['Condition']}")
+                                    if their_item.get('Description'):
+                                        st.write(f"**Description:** {their_item['Description']}")
+                                    if their_item.get('Tags'):
+                                        st.write(f"**Tags:** {their_item['Tags']}")
                         
-                        # Show both sides
-                        col1, col2 = st.columns(2)
-                        with col1:
-                            st.write("**Your Item**")
-                            if direction == 'Sending':
-                                st.info("📦 Your item is on its way!")
-                            else:
-                                st.info("📦 Their item is on its way!")
-                        with col2:
-                            st.write("**Their Item**")
-                            if direction == 'Receiving':
-                                st.info("📦 Their item is on its way!")
-                            else:
-                                st.info("📦 Your item is on its way!")
+                        st.info("Package is on its way!")
             else:
                 st.info("No swaps currently in transit")
         
@@ -125,14 +171,41 @@ if swaps:
                         if swap.get('Carrier') and swap.get('TrackingNum'):
                             st.caption(f"📦 {swap['Carrier']} - {swap['TrackingNum']}")
                         
-                        # Show both sides
-                        col1, col2 = st.columns(2)
-                        with col1:
-                            st.write("**Your Item**")
-                            st.success("✅ Delivered!")
-                        with col2:
-                            st.write("**Their Item**")
-                            st.success("✅ Delivered!")
+                        # Combined details dropdown
+                        your_item = swap.get('YourItem')
+                        their_item = swap.get('TheirItem')
+                        with st.expander("📋 Item Details", expanded=False):
+                            detail_col1, detail_col2 = st.columns(2)
+                            
+                            with detail_col1:
+                                st.write("**Your Item**")
+                                if your_item:
+                                    if your_item.get('Category'):
+                                        st.write(f"**Category:** {your_item['Category']}")
+                                    if your_item.get('Size'):
+                                        st.write(f"**Size:** {your_item['Size']}")
+                                    if your_item.get('Condition'):
+                                        st.write(f"**Condition:** {your_item['Condition']}")
+                                    if your_item.get('Description'):
+                                        st.write(f"**Description:** {your_item['Description']}")
+                                    if your_item.get('Tags'):
+                                        st.write(f"**Tags:** {your_item['Tags']}")
+                            
+                            with detail_col2:
+                                st.write("**Their Item**")
+                                if their_item:
+                                    if their_item.get('Category'):
+                                        st.write(f"**Category:** {their_item['Category']}")
+                                    if their_item.get('Size'):
+                                        st.write(f"**Size:** {their_item['Size']}")
+                                    if their_item.get('Condition'):
+                                        st.write(f"**Condition:** {their_item['Condition']}")
+                                    if their_item.get('Description'):
+                                        st.write(f"**Description:** {their_item['Description']}")
+                                    if their_item.get('Tags'):
+                                        st.write(f"**Tags:** {their_item['Tags']}")
+                        
+                        st.success("Delivered!")
             else:
                 st.info("No delivered swaps yet")
 

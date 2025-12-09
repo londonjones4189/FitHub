@@ -48,7 +48,7 @@ with left_col:
         st.error(f"Could not connect to database to get late shipments: {str(e)}")
 
 with right_col:
-    st.subheader("📊 Shipment Stats")
+    st.subheader("Shipment Stats")
     
     try:
         get_late_shipments = requests.get(f"{API_BASE}/shipments/delay")

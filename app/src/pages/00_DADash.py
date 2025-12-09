@@ -73,7 +73,7 @@ if st.button('🚨 Check Late Shipments',
              use_container_width=True):
     st.switch_page('pages/02_DA_Shipments.py')
 
-if st.button('👥 Analyze User Metrics', 
+if st.button('📈 User Metrics', 
              type='primary',
              use_container_width=True):
     st.switch_page('pages/03_DA_UserMetrics.py')
