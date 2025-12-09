@@ -8,7 +8,7 @@ from modules.nav import SideBarLinks
 
 from modules.deactivated import require_active_account
 if 'user_id' not in st.session_state:
-    st.session_state['user_id'] = 3
+    st.session_state['user_id'] = 5
 require_active_account()
 
 # Page config
@@ -78,16 +78,12 @@ div.stButton > button:hover {
 
 
 # Swapper Dashboard UI
-st.markdown(f'<div class="swapper-title">👋 Welcome, {st.session_state.get("first_name", "Swapper")}!</div>', unsafe_allow_html=True)
-
+st.markdown(f'<div class="swapper-title">👋 Welcome Swapper Waylen!</div>', unsafe_allow_html=True)
 st.markdown('<div class="section-subtitle">What would you like to do today?</div>', unsafe_allow_html=True)
 st.write("")
 
-# Main buttons - Feed and My Swaps
-col1, col2 = st.columns([1, 1])
-
-# Main buttons - Feed and My Swaps
-col1, col2 = st.columns([1, 1])
+# Main buttons - Feed, Post Listing, and My Swaps
+col1, col2, col3 = st.columns(3)
 
 with col1:
     if st.button("👕 Browse Feed", use_container_width=True, type="primary"):
@@ -96,6 +92,12 @@ with col1:
         st.switch_page('pages/50_Swapper_Feed.py')
 
 with col2:
+    if st.button("📤 Post Listing", use_container_width=True, type="primary"):
+        logger.info("Navigating to Post Listing")
+        require_active_account()
+        st.switch_page('pages/51_Swapper_Post_Listing.py')
+
+with col3:
     if st.button("🔄 My Swaps", use_container_width=True, type="primary"):
         logger.info("Navigating to My Swaps")
         require_active_account()

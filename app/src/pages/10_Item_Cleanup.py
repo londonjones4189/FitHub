@@ -55,7 +55,7 @@ div.stButton > button:hover {
 
 st.title("🧹 Item Cleanup")
 
-tab1, tab2 = st.tabs(["📦 All Items", "🔄 Duplicate Items"])
+tab1, tab2 = st.tabs(["All Items", "Duplicate Items"])
 category_emojis = {
     'shoes': '👟',
     't-shirt': '👕',
@@ -135,7 +135,6 @@ with tab1:
 # TAB 2: DUPLICATE ITEMS
 with tab2:
     st.markdown('<div class="section-title">Duplicate Items</div>', unsafe_allow_html=True)
-    st.info("These are items with identical Title, Category, Size, Condition, Type, and Owner. Click the button below to remove all duplicates (keeping one copy of each).")
 
     try:
         # Fetch duplicate items
@@ -179,7 +178,7 @@ with tab2:
                     except Exception as e:
                         st.error(f"Error deleting duplicates: {e}")
             else:
-                st.success("✅ No duplicate items found! Your database is clean.")
+                st.success("No duplicate items found!")
         else:
             st.error(f"Error fetching duplicates: {response.status_code} - {response.text}")
     except Exception as e:

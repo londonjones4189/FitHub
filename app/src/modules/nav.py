@@ -46,6 +46,9 @@ def SwapperFeed():
 def SwapperSwaps():
     st.sidebar.page_link("pages/52_My_Swaps.py", label = "My Swaps", icon="🔄")
 
+def SwapperPostListing():
+    st.sidebar.page_link("pages/51_Swapper_Post_Listing.py", label = "Post Listing", icon="📤")
+
 
 #### ------------------------ Taker------------------------
 def TakerNav():
@@ -106,6 +109,7 @@ def SideBarLinks(show_home=False):
         if st.session_state["role"] == "swapper":
             SwapperNav()
             SwapperFeed()
+            SwapperPostListing()
             SwapperSwaps()
 
         #If the user is a taker, give them access to the taker pages

@@ -11,7 +11,7 @@ SideBarLinks()
 
 API_BASE = "http://api:4000/d"
 
-st.title("👥 User Metrics & Analytics")
+st.title("📈 User Metrics & Analytics")
 
 # User Growth by Demographics
 st.subheader("User Growth by Demographics")

@@ -6,6 +6,30 @@ from modules.nav import SideBarLinks
 st.set_page_config(layout="wide")
 SideBarLinks()
 
+# CSS Styling for logout button
+st.markdown("""
+<style>
+/* Logout button styling */
+section[data-testid="stSidebar"] > div:last-child .stButton > button,
+div[data-testid="stSidebar"] > div:last-child .stButton > button {
+    background-color: #328E6E !important;
+    color: #E1EEBC !important;
+    height: 3em !important;
+    width: 100% !important;
+    font-size: 18px !important;
+    font-weight: bold !important;
+    border-radius: 12px !important;
+    border: none !important;
+    margin-top: 1rem !important;
+}
+section[data-testid="stSidebar"] > div:last-child .stButton > button:hover,
+div[data-testid="stSidebar"] > div:last-child .stButton > button:hover {
+    background-color: #2a7359 !important;
+    border-color: #328E6E !important;
+}
+</style>
+""", unsafe_allow_html=True)
+
 API_BASE = "http://api:4000/t"
 
 st.title('✨ Personalized Recommendations')

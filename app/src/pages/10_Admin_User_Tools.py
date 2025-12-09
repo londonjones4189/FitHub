@@ -40,7 +40,7 @@ div.stButton > button {
     width: 100%;
     font-size: 20px;
     font-weight: bold;
-    border-radius: 10px;
+    border-radius: 10px;f
     border: none;
 }
 
@@ -57,7 +57,6 @@ tab1, tab2 = st.tabs(["✅ Update User Role", "❌ Deactivate User"])
 # TAB 1: Update User Role
 with tab1:
     st.markdown('<div class="section-title">Update User Roles</div>', unsafe_allow_html=True)
-    st.info("Update a user's role to change their permissions and access levels.")
 
     try:
         response = requests.get(f"{API_BASE}/users")
@@ -118,7 +117,6 @@ with tab1:
 # TAB 2: Deactivate User
 with tab2:
     st.markdown('<div class="section-title">Deactivate Users</div>', unsafe_allow_html=True)
-    st.info("Deactivate user accounts to revoke their access to the platform. Inactive users cannot log in or interact with the system.")
 
     try:
         response = requests.get(f"{API_BASE}/users")
