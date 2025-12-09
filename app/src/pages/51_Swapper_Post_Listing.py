@@ -9,7 +9,7 @@ from modules.nav import SideBarLinks
 from modules.deactivated import require_active_account
 
 if 'user_id' not in st.session_state:
-    st.session_state['user_id'] = 3
+    st.session_state['user_id'] = 8
 require_active_account()
 
 st.set_page_config(layout="wide")
@@ -101,8 +101,6 @@ try:
         st.write(f"You have {len(my_listings)} item(s) listed:")
         with st.container(height=400, border=True):
             for listing in my_listings:
-                status_emoji = "✅" if listing.get('IsAvailable') else "❌"
-                status_text = "Available" if listing.get('IsAvailable') else "Unavailable"
                 
                 with st.expander(f"{listing['Title']} - {listing.get('Size', 'N/A')} ({listing.get('Condition', 'N/A')})", expanded=False):
                     col1, col2 = st.columns(2)

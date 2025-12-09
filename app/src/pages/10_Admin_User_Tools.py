@@ -40,7 +40,7 @@ div.stButton > button {
     width: 100%;
     font-size: 20px;
     font-weight: bold;
-    border-radius: 10px;f
+    border-radius: 10px;
     border: none;
 }
 
