@@ -9,7 +9,7 @@ from modules.nav import SideBarLinks
 from modules.deactivated import require_active_account
 
 if 'user_id' not in st.session_state:
-    st.session_state['user_id'] = 8
+    st.session_state['user_id'] = 5
 require_active_account()
 
 st.set_page_config(layout="wide")
@@ -22,7 +22,7 @@ st.title("📤 Post a New Listing")
 
 st.subheader("Upload a New Listing")
 
-user_id = st.session_state.get('user_id', 8)
+user_id = st.session_state.get('user_id', 5)
 
 with st.form("upload_listing_form", border=True):
     col1, col2 = st.columns(2)

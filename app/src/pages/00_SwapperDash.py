@@ -78,7 +78,7 @@ div.stButton > button:hover {
 
 
 # Swapper Dashboard UI
-st.markdown(f'<div class="swapper-title">👋 Welcome Swapper Waylen!</div>', unsafe_allow_html=True)
+st.markdown(f'<div class="swapper-title">👋 Welcome, Swapper Kingsley!</div>', unsafe_allow_html=True)
 st.markdown('<div class="section-subtitle">What would you like to do today?</div>', unsafe_allow_html=True)
 st.write("")
 

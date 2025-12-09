@@ -973,3 +973,43 @@ insert into Feedback (OrderID, Rating, Comment, CreatedAt, CreatedByID) values (
 insert into Feedback (OrderID, Rating, Comment, CreatedAt, CreatedByID) values (18, 2, 'exceeded my expectations!', '2025-11-27 03:42:19', 28);
 insert into Feedback (OrderID, Rating, Comment, CreatedAt, CreatedByID) values (15, 2, 'great customer service', '2025-01-07 18:42:59', 11);
 SELECT * FROM Feedback;
+
+-- ===========================================================================
+-- MINIMAL MOCK SWAP DATA FOR USER 5 (Swapper)
+-- ===========================================================================
+
+-- Swap items for user 5 and other users
+insert into Items (Title, Category, Description, Size, `Condition`, IsAvailable, OwnerID, ListedAt, `Type`) values ('Denim Jacket', 'jacket', 'Classic vintage denim jacket', 'M', 'Excellent', false, 5, '2024-01-10 10:00:00', 'swap');
+insert into Items (Title, Category, Description, Size, `Condition`, IsAvailable, OwnerID, ListedAt, `Type`) values ('Leather Boots', 'shoes', 'Genuine leather boots, barely worn', '9', 'Very good', false, 6, '2024-01-10 11:00:00', 'swap');
+insert into Items (Title, Category, Description, Size, `Condition`, IsAvailable, OwnerID, ListedAt, `Type`) values ('Cotton T-Shirt', 't-shirt', 'Comfortable cotton t-shirt', 'L', 'Good', false, 5, '2024-01-08 14:00:00', 'swap');
+insert into Items (Title, Category, Description, Size, `Condition`, IsAvailable, OwnerID, ListedAt, `Type`) values ('Wool Sweater', 'sweater', 'Warm wool sweater for winter', 'M', 'Excellent', false, 8, '2024-01-08 15:00:00', 'swap');
+insert into Items (Title, Category, Description, Size, `Condition`, IsAvailable, OwnerID, ListedAt, `Type`) values ('Blue Jeans', 'jeans', 'Classic blue jeans, well-maintained', '32', 'Very good', false, 5, '2024-01-05 09:00:00', 'swap');
+insert into Items (Title, Category, Description, Size, `Condition`, IsAvailable, OwnerID, ListedAt, `Type`) values ('Silk Blouse', 'blouse', 'Elegant silk blouse for formal occasions', 'S', 'Excellent', false, 10, '2024-01-05 10:00:00', 'swap');
+
+-- Add tags for swap items
+insert IGNORE into ItemTags (ItemID, TagID) SELECT DISTINCT i.ItemID, MIN(t.TagID) FROM Items i, Tags t WHERE i.Title = 'Denim Jacket' AND i.OwnerID = 5 AND t.Title = 'Retro' GROUP BY i.ItemID;
+insert IGNORE into ItemTags (ItemID, TagID) SELECT DISTINCT i.ItemID, MIN(t.TagID) FROM Items i, Tags t WHERE i.Title = 'Denim Jacket' AND i.OwnerID = 5 AND t.Title = 'Urban' GROUP BY i.ItemID;
+insert IGNORE into ItemTags (ItemID, TagID) SELECT DISTINCT i.ItemID, MIN(t.TagID) FROM Items i, Tags t WHERE i.Title = 'Leather Boots' AND i.OwnerID = 6 AND t.Title = 'Edgy' GROUP BY i.ItemID;
+insert IGNORE into ItemTags (ItemID, TagID) SELECT DISTINCT i.ItemID, MIN(t.TagID) FROM Items i, Tags t WHERE i.Title = 'Cotton T-Shirt' AND i.OwnerID = 5 AND t.Title = 'Minimalist' GROUP BY i.ItemID;
+insert IGNORE into ItemTags (ItemID, TagID) SELECT DISTINCT i.ItemID, MIN(t.TagID) FROM Items i, Tags t WHERE i.Title = 'Wool Sweater' AND i.OwnerID = 8 AND t.Title = 'Preppy' GROUP BY i.ItemID;
+insert IGNORE into ItemTags (ItemID, TagID) SELECT DISTINCT i.ItemID, MIN(t.TagID) FROM Items i, Tags t WHERE i.Title = 'Blue Jeans' AND i.OwnerID = 5 AND t.Title = 'Urban' GROUP BY i.ItemID;
+insert IGNORE into ItemTags (ItemID, TagID) SELECT DISTINCT i.ItemID, MIN(t.TagID) FROM Items i, Tags t WHERE i.Title = 'Silk Blouse' AND i.OwnerID = 10 AND t.Title = 'Sophisticated' GROUP BY i.ItemID;
+
+-- Shipping records
+insert into Shippings (Carrier, TrackingNum, DateShipped, DateArrived) values ('USPS', '9400111899223197428490', '2024-01-12', null);
+insert into Shippings (Carrier, TrackingNum, DateShipped, DateArrived) values ('FedEx', '1234567890123', '2024-01-07', '2024-01-09');
+
+-- Pending swap: User 5 giving Denim Jacket, receiving Leather Boots from User 6
+insert into Orders (GivenByID, ReceiverID, CreatedAt, ShippingID) values (5, 6, '2024-01-15 10:30:00', null);
+insert into OrderItems (OrderID, ItemID) SELECT o.OrderID, i.ItemID FROM Orders o, Items i WHERE o.GivenByID = 5 AND o.ReceiverID = 6 AND o.CreatedAt = '2024-01-15 10:30:00' AND i.Title = 'Denim Jacket' AND i.OwnerID = 5;
+insert into OrderItems (OrderID, ItemID) SELECT o.OrderID, i.ItemID FROM Orders o, Items i WHERE o.GivenByID = 5 AND o.ReceiverID = 6 AND o.CreatedAt = '2024-01-15 10:30:00' AND i.Title = 'Leather Boots' AND i.OwnerID = 6;
+
+-- In Transit swap: User 8 giving Wool Sweater, receiving Cotton T-Shirt from User 5
+insert into Orders (GivenByID, ReceiverID, CreatedAt, ShippingID) SELECT 8, 5, '2024-01-10 14:20:00', s.ShippingID FROM Shippings s WHERE s.TrackingNum = '9400111899223197428490' LIMIT 1;
+insert into OrderItems (OrderID, ItemID) SELECT o.OrderID, i.ItemID FROM Orders o, Items i WHERE o.GivenByID = 8 AND o.ReceiverID = 5 AND o.CreatedAt = '2024-01-10 14:20:00' AND i.Title = 'Wool Sweater' AND i.OwnerID = 8;
+insert into OrderItems (OrderID, ItemID) SELECT o.OrderID, i.ItemID FROM Orders o, Items i WHERE o.GivenByID = 8 AND o.ReceiverID = 5 AND o.CreatedAt = '2024-01-10 14:20:00' AND i.Title = 'Cotton T-Shirt' AND i.OwnerID = 5;
+
+-- Delivered swap: User 5 giving Blue Jeans, receiving Silk Blouse from User 10
+insert into Orders (GivenByID, ReceiverID, CreatedAt, ShippingID) SELECT 5, 10, '2024-01-05 09:15:00', s.ShippingID FROM Shippings s WHERE s.TrackingNum = '1234567890123' LIMIT 1;
+insert into OrderItems (OrderID, ItemID) SELECT o.OrderID, i.ItemID FROM Orders o, Items i WHERE o.GivenByID = 5 AND o.ReceiverID = 10 AND o.CreatedAt = '2024-01-05 09:15:00' AND i.Title = 'Blue Jeans' AND i.OwnerID = 5;
+insert into OrderItems (OrderID, ItemID) SELECT o.OrderID, i.ItemID FROM Orders o, Items i WHERE o.GivenByID = 5 AND o.ReceiverID = 10 AND o.CreatedAt = '2024-01-05 09:15:00' AND i.Title = 'Silk Blouse' AND i.OwnerID = 10;

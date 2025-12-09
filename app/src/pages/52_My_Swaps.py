@@ -17,7 +17,7 @@ logger.info(f"My Swaps loaded by {st.session_state.get('first_name', 'Unknown')}
 API_BASE = "http://api:4000/s"
 
 st.title('🔄 My Swaps & Tracking')
-user_id = st.session_state.get('user_id', 3)
+user_id = st.session_state.get('user_id', 5)
 
 # Get swap tracking data
 response = requests.get(f"{API_BASE}/track_swap/{user_id}")

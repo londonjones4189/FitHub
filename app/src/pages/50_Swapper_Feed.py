@@ -125,7 +125,7 @@ if listings:
                     st.write(f"**Listed At:** {item.get('ListedAt', 'N/A')}")
 
                 item_id = item.get('ItemID')
-                user_id = st.session_state.get('user_id', 4)
+                user_id = st.session_state.get('user_id', 5)
                 
                 if st.button(f"Initiate Swap", key=f"swap_{item_id}", type="primary"):
                     # Store the desired item in session state to show swap modal

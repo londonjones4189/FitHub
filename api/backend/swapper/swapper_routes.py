@@ -364,12 +364,67 @@ def track_swap(UserID):
     '''
 
     cursor.execute(the_query, (UserID, UserID, UserID, UserID))
-    theData = cursor.fetchall()
+    swaps = cursor.fetchall()
 
-    the_response = make_response(jsonify(theData))
-    the_response.status_code = 200
-    the_response.mimetype = 'application/json'
-    return the_response
+    # Get item details for each swap
+    for swap in swaps:
+        order_id = swap['OrderID']
+        
+        # Get all items in this swap
+        items_query = '''
+            SELECT 
+                i.ItemID, i.Title, i.Category, i.Description, i.Size, i.`Condition`, i.OwnerID
+            FROM OrderItems oi
+            JOIN Items i ON oi.ItemID = i.ItemID
+            WHERE oi.OrderID = %s
+        '''
+        cursor.execute(items_query, (order_id,))
+        items = cursor.fetchall()
+        
+        # Determine which item is yours and which is theirs
+        your_item = None
+        their_item = None
+        
+        for item in items:
+            if item['OwnerID'] == UserID:
+                your_item = item
+            else:
+                their_item = item
+        
+        # Get tags for items
+        item_ids = [item['ItemID'] for item in items]
+        tags_dict = {}
+        
+        if item_ids:
+            placeholders = ', '.join(['%s'] * len(item_ids))
+            tags_query = f'''
+                SELECT DISTINCT it.ItemID, t.Title
+                FROM ItemTags it
+                JOIN Tags t ON it.TagID = t.TagID
+                WHERE it.ItemID IN ({placeholders})
+            '''
+            cursor.execute(tags_query, item_ids)
+            tag_rows = cursor.fetchall()
+            
+            for row in tag_rows:
+                item_id = row['ItemID']
+                if item_id not in tags_dict:
+                    tags_dict[item_id] = []
+                # Only add tag if not already in list (prevent duplicates)
+                if row['Title'] not in tags_dict[item_id]:
+                    tags_dict[item_id].append(row['Title'])
+        
+        # Add tags to items
+        if your_item:
+            your_item['Tags'] = ', '.join(tags_dict.get(your_item['ItemID'], []))
+        if their_item:
+            their_item['Tags'] = ', '.join(tags_dict.get(their_item['ItemID'], []))
+        
+        # Add items to swap data
+        swap['YourItem'] = your_item
+        swap['TheirItem'] = their_item
+
+    return make_response(jsonify(swaps), 200)
 
 
 
