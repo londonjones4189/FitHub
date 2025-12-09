@@ -1,7 +1,7 @@
 # FitHub: A Sustainable Clothing Trading Platform
 # A CS 3200 Group Project Fall 2025 
 
-Demo Video: youtube.com/watch?v=xyiP_cNYyYg&feature=youtu.be
+Demo Video: [Demo!](youtube.com/watch?v=xyiP_cNYyYg&feature=youtu.be)
 
 Group Members:
 
